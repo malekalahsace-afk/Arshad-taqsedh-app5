@@ -1,4 +1,4 @@
-const CACHE_NAME = 'taqseet-cache-v1';
+const CACHE_NAME = 'taqseet-cache-v2';
 const FILES_TO_CACHE = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', (event) => {
@@ -17,8 +17,16 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
+// إستراتيجية "الشبكة أولاً": يحاول يجيب أحدث نسخة من النت أول شي،
+// ولو ماكو نت (أوفلاين) يرجع للنسخة المخزنة كحل بديل.
 self.addEventListener('fetch', (event) => {
   event.respondWith(
-    caches.match(event.request).then((cached) => cached || fetch(event.request))
+    fetch(event.request)
+      .then((response) => {
+        const clone = response.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+        return response;
+      })
+      .catch(() => caches.match(event.request))
   );
 });

@@ -266,6 +266,14 @@ input{font:inherit}
             return id;
         }
 
+        function clearAppData() {
+            if(!confirm('هل أنت متأكد من مسح كل بيانات المخزن والزبائن؟ لا يمكن التراجع.')) return;
+            localStorage.removeItem('mySales');
+            localStorage.removeItem('myInventory');
+            localStorage.removeItem('darkMode');
+            location.reload();
+        }
+
         function normalizeCode(str) {
             return str.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
         }
@@ -401,7 +409,7 @@ input{font:inherit}
                         <button onclick="exportBackup()" class="w-full bg-teal-600 text-white p-3 rounded mb-3">📤 تصدير نسخة احتياطية</button>
                         <button onclick="document.getElementById('importFile').click()" class="w-full bg-gray-500 text-white p-3 rounded mb-3">📥 استيراد نسخة احتياطية</button>
                         <input id="importFile" type="file" accept="application/json" class="hidden" onchange="importBackup(event)">
-                        <button onclick="if(confirm('هل أنت متأكد من مسح كل البيانات؟ لا يمكن التراجع.')){localStorage.clear(); location.reload();}" class="w-full bg-red-600 text-white p-3 rounded">مسح كافة البيانات</button>
+                        <button onclick="clearAppData()" class="w-full bg-red-600 text-white p-3 rounded">مسح كافة البيانات</button>
                     `;
                     break;
             }
