@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" id="htmlTag">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام التقسيط المحاسبي المتكامل</title>
+    <style>
+*,::before,::after{box-sizing:border-box;border-width:0;border-style:solid;border-color:#e5e7eb}
+body{margin:0;font-family:'Segoe UI',Tahoma,Arial,sans-serif}
+button{font:inherit;cursor:pointer}
+input{font:inherit}
+
+/* Layout */
+.flex{display:flex}
+.hidden{display:none}
+.absolute{position:absolute}
+.relative{position:relative}
+.flex-1{flex:1 1 0%}
+.flex-col{flex-direction:column}
+.flex-row{flex-direction:row}
+.items-center{align-items:center}
+.justify-center{justify-content:center}
+.justify-between{justify-content:space-between}
+.justify-around{justify-content:space-around}
+.text-center{text-align:center}
+.text-right{text-align:right}
+.cursor-pointer{cursor:pointer}
+.overflow-y-auto{overflow-y:auto}
+.shrink-0{flex-shrink:0}
+.leading-none{line-height:1}
+.transition-all{transition-property:all;transition-timing-function:cubic-bezier(.4,0,.2,1);transition-duration:.15s}
+
+/* Sizing */
+.w-full{width:100%}
+.w-20{width:5rem}
+.h-screen{height:100vh}
+.max-h-40{max-height:10rem}
+.max-h-72{max-height:18rem}
+.max-h-\[65vh\]{max-height:65vh}
+
+/* Spacing */
+.p-1{padding:.25rem}
+.p-2{padding:.5rem}
+.p-3{padding:.75rem}
+.p-4{padding:1rem}
+.px-3{padding-left:.75rem;padding-right:.75rem}
+.py-1{padding-top:.25rem;padding-bottom:.25rem}
+.py-2{padding-top:.5rem;padding-bottom:.5rem}
+.pb-1{padding-bottom:.25rem}
+.pt-2{padding-top:.5rem}
+.mb-1{margin-bottom:.25rem}
+.mb-2{margin-bottom:.5rem}
+.mb-3{margin-bottom:.75rem}
+.mb-4{margin-bottom:1rem}
+.mt-1{margin-top:.25rem}
+.mt-2{margin-top:.5rem}
+.mt-4{margin-top:1rem}
+.gap-1{gap:.25rem}
+.gap-2{gap:.5rem}
+
+/* Position offsets */
+.top-full{top:100%}
+.left-2{left:.5rem}
+.right-2{right:.5rem}
+.z-40{z-index:40}
+.z-50{z-index:50}
+
+/* Borders / radius / shadow */
+.border{border-width:1px}
+.border-b{border-bottom-width:1px}
+.border-t{border-top-width:1px}
+.rounded{border-radius:.25rem}
+.rounded-lg{border-radius:.5rem}
+.rounded-xl{border-radius:.75rem}
+.rounded-2xl{border-radius:1rem}
+.border-gray-200{border-color:#e5e7eb}
+.border-gray-300{border-color:#d1d5db}
+.shadow-lg{box-shadow:0 10px 15px -3px rgba(0,0,0,.1),0 4px 6px -4px rgba(0,0,0,.1)}
+.shadow-2xl{box-shadow:0 25px 50px -12px rgba(0,0,0,.25)}
+
+/* Backgrounds */
+.bg-white{background-color:#fff}
+.bg-gray-50{background-color:#f9fafb}
+.bg-gray-100{background-color:#f3f4f6}
+.bg-gray-500{background-color:#6b7280}
+.bg-red-500{background-color:#ef4444}
+.bg-red-600{background-color:#dc2626}
+.bg-green-600{background-color:#16a34a}
+.bg-orange-600{background-color:#ea580c}
+.bg-teal-50{background-color:#f0fdfa}
+.bg-teal-600{background-color:#0d9488}
+.bg-teal-700{background-color:#0f766e}
+
+/* Text colors */
+.text-white{color:#fff}
+.text-gray-400{color:#9ca3af}
+.text-gray-500{color:#6b7280}
+.text-gray-700{color:#374151}
+.text-green-600{color:#16a34a}
+.text-green-700{color:#15803d}
+.text-red-500{color:#ef4444}
+.text-red-600{color:#dc2626}
+.text-teal-600{color:#0d9488}
+
+/* Typography */
+.font-bold{font-weight:700}
+.font-semibold{font-weight:600}
+.text-2xl{font-size:1.5rem;line-height:2rem}
+.text-4xl{font-size:2.25rem;line-height:2.5rem}
+.text-lg{font-size:1.125rem;line-height:1.75rem}
+.text-sm{font-size:.875rem;line-height:1.25rem}
+.text-xs{font-size:.75rem;line-height:1rem}
+.text-\[10px\]{font-size:10px}
+
+/* Hover / focus */
+.hover\:bg-gray-100:hover{background-color:#f3f4f6}
+.hover\:bg-teal-100:hover{background-color:#ccfbf1}
+.focus\:outline-none:focus{outline:2px solid transparent;outline-offset:2px}
+.focus\:ring-2.focus\:ring-teal-400:focus{box-shadow:0 0 0 2px #2dd4bf}
+
+/* Dark mode (class strategy: <html class="dark">) */
+.dark .dark\:bg-gray-700{background-color:#374151}
+.dark .dark\:bg-gray-800{background-color:#1f2937}
+.dark .dark\:bg-gray-900{background-color:#111827}
+.dark .dark\:border-gray-600{border-color:#4b5563}
+.dark .dark\:border-gray-700{border-color:#374151}
+.dark .dark\:text-white{color:#fff}
+.dark .dark\:text-gray-300{color:#d1d5db}
+.dark .dark\:hover\:bg-gray-600:hover{background-color:#4b5563}
+
+/* Responsive (md: min-width 768px) */
+@media (min-width:768px){
+    .md\:w-32{width:8rem}
+    .md\:flex-col{flex-direction:column}
+    .md\:flex-row{flex-direction:row}
+    .md\:border-l{border-left-width:1px}
+}
+    </style>
+    <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%20%22%D9%86%D8%B8%D8%A7%D9%85%20%D8%A7%D9%84%D8%AA%D9%82%D8%B3%D9%8A%D8%B7%20%D8%A7%D9%84%D9%85%D8%AD%D8%A7%D8%B3%D8%A8%D9%8A%20%D8%A7%D9%84%D9%85%D8%AA%D9%83%D8%A7%D9%85%D9%84%22%2C%20%22short_name%22%3A%20%22%D8%A7%D9%84%D8%AA%D9%82%D8%B3%D9%8A%D8%B7%22%2C%20%22start_url%22%3A%20%22./index.html%22%2C%20%22display%22%3A%20%22standalone%22%2C%20%22background_color%22%3A%20%22%23eef2ea%22%2C%20%22theme_color%22%3A%20%22%230d9488%22%2C%20%22icons%22%3A%20%5B%7B%22src%22%3A%20%22data%3Aimage/svg%2Bxml%2C%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%27512%27%20height%3D%27512%27%3E%3Crect%20width%3D%27512%27%20height%3D%27512%27%20rx%3D%2796%27%20fill%3D%27%25230d9488%27/%3E%3Ctext%20x%3D%2750%2525%27%20y%3D%2758%2525%27%20font-size%3D%27300%27%20text-anchor%3D%27middle%27%20dominant-baseline%3D%27middle%27%3E%25F0%259F%2592%25B0%3C/text%3E%3C/svg%3E%22%2C%20%22sizes%22%3A%20%22512x512%22%2C%20%22type%22%3A%20%22image/svg%2Bxml%22%7D%2C%20%7B%22src%22%3A%20%22data%3Aimage/svg%2Bxml%2C%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%27512%27%20height%3D%27512%27%3E%3Crect%20width%3D%27512%27%20height%3D%27512%27%20rx%3D%2796%27%20fill%3D%27%25230d9488%27/%3E%3Ctext%20x%3D%2750%2525%27%20y%3D%2758%2525%27%20font-size%3D%27300%27%20text-anchor%3D%27middle%27%20dominant-baseline%3D%27middle%27%3E%25F0%259F%2592%25B0%3C/text%3E%3C/svg%3E%22%2C%20%22sizes%22%3A%20%22192x192%22%2C%20%22type%22%3A%20%22image/svg%2Bxml%22%7D%5D%7D">
+    <meta name="theme-color" content="#0d9488">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="نظام التقسيط">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='512' height='512'><rect width='512' height='512' rx='96' fill='%230d9488'/><text x='50%25' y='58%25' font-size='300' text-anchor='middle' dominant-baseline='middle'>%F0%9F%92%B0</text></svg>">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='512' height='512'><rect width='512' height='512' rx='96' fill='%230d9488'/><text x='50%25' y='58%25' font-size='300' text-anchor='middle' dominant-baseline='middle'>%F0%9F%92%B0</text></svg>">
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 h-screen flex flex-col md:flex-row">
+
+    <aside class="w-full md:w-32 bg-white dark:bg-gray-800 border-t md:border-l border-gray-200 dark:border-gray-700 flex flex-col shadow-lg z-40">
+        <div class="relative p-2 border-b border-gray-200 dark:border-gray-700">
+            <input id="globalSearch" oninput="liveSearch(this.value)" placeholder="🔍 بحث زبون / مادة"
+                class="w-full p-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-400">
+            <div id="searchResults" style="-webkit-overflow-scrolling: touch;" class="hidden absolute top-full mt-1 left-2 right-2 bg-white dark:bg-gray-700 rounded-xl shadow-2xl max-h-72 overflow-y-auto z-50 text-right"></div>
+        </div>
+        <div class="flex-1 flex flex-row md:flex-col items-center py-2 justify-around">
+            <button onclick="renderSection('sales')" class="p-4 bg-gray-50 dark:bg-gray-700 rounded-2xl hover:bg-teal-100 transition-all text-2xl flex flex-col items-center gap-1">
+                📊 <span class="dark:text-white text-[10px] font-bold">مبيعات</span>
+            </button>
+            <button onclick="renderSection('inventory')" class="p-4 bg-gray-50 dark:bg-gray-700 rounded-2xl hover:bg-teal-100 transition-all text-2xl flex flex-col items-center gap-1">
+                📦 <span class="dark:text-white text-[10px] font-bold">المخزن</span>
+            </button>
+            <button onclick="renderSection('customers')" class="p-4 bg-gray-50 dark:bg-gray-700 rounded-2xl hover:bg-teal-100 transition-all text-2xl flex flex-col items-center gap-1">
+                👥 <span class="dark:text-white text-[10px] font-bold">الزبائن</span>
+            </button>
+            <button onclick="renderSection('settings')" class="p-4 bg-gray-50 dark:bg-gray-700 rounded-2xl hover:bg-teal-100 transition-all text-2xl flex flex-col items-center gap-1">
+                ⚙️ <span class="dark:text-white text-[10px] font-bold">الإعدادات</span>
+            </button>
+        </div>
+
+        <div id="drawer" class="hidden w-full bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 shadow-lg p-4 max-h-[65vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h2 id="drawerTitle" class="font-bold text-lg dark:text-white"></h2>
+                <button onclick="closeDrawer()" class="dark:text-white text-2xl leading-none">✕</button>
+            </div>
+            <div id="drawerContent"></div>
+        </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col justify-center items-center text-center">
+        <div id="liveClock" class="text-4xl font-bold dark:text-white">00:00:00</div>
+        <div id="liveDate" class="text-lg text-gray-500 dark:text-gray-300 mt-2 font-semibold">--</div>
+        <p class="text-gray-400 mt-2">اختر قسم من القائمة</p>
+    </main>
+
+    <script>
+        let state = {
+            sales: (JSON.parse(localStorage.getItem('mySales')) || []).map(c =>
+                c.items ? c : {...c, items: [{name: c.item, price: c.total}]}
+            ),
+            inventory: JSON.parse(localStorage.getItem('myInventory')) || []
+        };
+
+        function save() {
+            localStorage.setItem('mySales', JSON.stringify(state.sales));
+            localStorage.setItem('myInventory', JSON.stringify(state.inventory));
+        }
+        function openDrawer() { document.getElementById('drawer').classList.remove('hidden'); }
+        function closeDrawer() { document.getElementById('drawer').classList.add('hidden'); }
+
+        // ---------- الوضع الليلي ----------
+        if(localStorage.getItem('darkMode') === '1'){
+            document.documentElement.classList.add('dark');
+        }
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+            localStorage.setItem('darkMode', document.documentElement.classList.contains('dark') ? '1' : '0');
+        }
+
+        // نظام تقسيم المهام (Router System)
+        function renderSection(section) {
+            let content = document.getElementById('drawerContent');
+            let title = document.getElementById('drawerTitle');
+            content.innerHTML = "";
+
+            switch(section) {
+                case 'sales':
+                    title.innerText = "قائمة المبيعات";
+                    if(state.inventory.length === 0){
+                        content.innerHTML = `<p class="text-gray-400 text-center">لا توجد مواد بالمخزن بعد. أضف مواد من قسم "المخزن" أولاً.</p>`;
+                    } else {
+                        content.innerHTML = state.inventory.map((i, idx) =>
+                            `<div class="p-4 bg-teal-50 dark:bg-gray-700 dark:text-white mb-2 rounded-xl flex justify-between items-center">
+                                <span>${i.name} <span class="text-gray-500 text-sm">(${i.price} د.ع)</span></span>
+                                <button onclick="addSaleForm(${idx})" class="bg-teal-600 text-white px-3 py-1 rounded">بيع</button>
+                            </div>`
+                        ).join('');
+                    }
+                    break;
+                case 'inventory':
+                    title.innerText = "المخزن";
+                    content.innerHTML = `<input id="invName" placeholder="اسم المادة" class="w-full p-2 border rounded mb-2">
+                        <input id="invPrice" type="number" placeholder="سعر البيع" class="w-full p-2 border rounded mb-2">
+                        <button onclick="saveInv()" class="w-full bg-orange-600 text-white p-2 rounded">إضافة</button>
+                        <div id="invList" class="mt-4"></div>`;
+                    renderInvList();
+                    break;
+                case 'customers':
+                    title.innerText = "الزبائن";
+                    if(state.sales.length === 0){
+                        content.innerHTML = `<p class="text-gray-400 text-center">لا يوجد زبائن حتى الآن.</p>`;
+                    } else {
+                        content.innerHTML = state.sales.map((c, i) =>
+                            `<div onclick="showCustDetails(${i})" class="p-3 bg-gray-100 dark:bg-gray-700 dark:text-white mb-2 rounded cursor-pointer flex justify-between">
+                                <span>${c.name} — ${c.items.map(it => it.name).join('، ')}</span>
+                                <span class="${c.remaining > 0 ? 'text-red-600' : 'text-green-600'} font-bold">
+                                    ${c.remaining > 0 ? 'متبقي: ' + c.remaining : 'مسدد بالكامل'}
+                                </span>
+                            </div>`
+                        ).join('');
+                    }
+                    break;
+                case 'settings':
+                    title.innerText = "الإعدادات";
+                    content.innerHTML = `
+                        <button onclick="toggleDarkMode()" class="w-full bg-teal-700 text-white p-3 rounded mb-3">🌙 تبديل الوضع الليلي / النهاري</button>
+                        <button onclick="exportBackup()" class="w-full bg-teal-600 text-white p-3 rounded mb-3">📤 تصدير نسخة احتياطية</button>
+                        <button onclick="document.getElementById('importFile').click()" class="w-full bg-gray-500 text-white p-3 rounded mb-3">📥 استيراد نسخة احتياطية</button>
+                        <input id="importFile" type="file" accept="application/json" class="hidden" onchange="importBackup(event)">
+                        <button onclick="if(confirm('هل أنت متأكد من مسح كل البيانات؟ لا يمكن التراجع.')){localStorage.clear(); location.reload();}" class="w-full bg-red-600 text-white p-3 rounded">مسح كافة البيانات</button>
+                    `;
+                    break;
+            }
+            openDrawer();
+        }
+
+        // ---------- المخزن ----------
+        function saveInv() {
+            const nameEl = document.getElementById('invName');
+            const priceEl = document.getElementById('invPrice');
+            const name = nameEl.value.trim();
+            const price = parseFloat(priceEl.value);
+
+            if(!name){ alert('الرجاء إدخال اسم المادة'); return; }
+            if(isNaN(price) || price <= 0){ alert('الرجاء إدخال سعر صحيح'); return; }
+
+            state.inventory.push({name, price});
+            save();
+            nameEl.value = ''; priceEl.value = '';
+            renderInvList();
+        }
+        function renderInvList() {
+            document.getElementById('invList').innerHTML = state.inventory.map((i, idx) =>
+                `<div id="invRow-${idx}" class="p-2 border-b dark:border-gray-700 dark:text-white flex justify-between items-center gap-2">
+                    <span onclick="editInv(${idx})" class="cursor-pointer flex-1">${i.name} - ${i.price} د.ع</span>
+                    <button onclick="editInv(${idx})" class="text-teal-600 text-sm shrink-0">تعديل</button>
+                    <button onclick="deleteInv(${idx})" class="text-red-500 text-sm shrink-0">حذف</button>
+                </div>`
+            ).join('');
+        }
+        function deleteInv(idx) {
+            const item = state.inventory[idx];
+            if(!confirm(`هل أنت متأكد من حذف "${item.name}" من المخزن؟`)) return;
+            state.inventory.splice(idx, 1);
+            save();
+            renderInvList();
+        }
+        function editInv(idx) {
+            const item = state.inventory[idx];
+            const row = document.getElementById('invRow-' + idx);
+            row.innerHTML = `
+                <input id="editName-${idx}" value="${item.name}" class="flex-1 p-1 text-sm border rounded">
+                <input id="editPrice-${idx}" type="number" value="${item.price}" class="w-20 p-1 text-sm border rounded">
+                <button onclick="saveEditInv(${idx})" class="text-green-600 text-sm shrink-0">حفظ</button>
+                <button onclick="renderInvList()" class="text-gray-500 text-sm shrink-0">إلغاء</button>
+            `;
+        }
+        function saveEditInv(idx) {
+            const name = document.getElementById('editName-' + idx).value.trim();
+            const price = parseFloat(document.getElementById('editPrice-' + idx).value);
+
+            if(!name){ alert('الرجاء إدخال اسم المادة'); return; }
+            if(isNaN(price) || price <= 0){ alert('الرجاء إدخال سعر صحيح'); return; }
+
+            state.inventory[idx] = {name, price};
+            save();
+            renderInvList();
+        }
+
+        // ---------- المبيعات (تسجيل عملية بيع جديدة) ----------
+        function addSaleForm(invIdx) {
+            const item = state.inventory[invIdx];
+            const title = document.getElementById('drawerTitle');
+            const content = document.getElementById('drawerContent');
+            title.innerText = "بيع: " + item.name;
+
+            content.innerHTML = `
+                <div class="mb-3 p-3 bg-gray-50 dark:bg-gray-700 dark:text-white rounded">السعر الكلي: <b>${item.price} د.ع</b></div>
+                <input id="custName" placeholder="اسم الزبون" class="w-full p-2 border rounded mb-2">
+                <input id="downPay" type="number" placeholder="الدفعة الأولى (اتركه فارغاً إن لم توجد)" class="w-full p-2 border rounded mb-2">
+                <button onclick="confirmSale(${invIdx})" class="w-full bg-green-600 text-white p-2 rounded">تأكيد البيع</button>
+                <button onclick="renderSection('sales')" class="w-full bg-gray-50 text-gray-700 p-2 rounded mt-2">رجوع</button>
+            `;
+        }
+
+        function nowStamp() {
+            const now = new Date();
+            const d = now.toLocaleDateString('ar-EG-u-nu-latn', { year: 'numeric', month: 'long', day: 'numeric' });
+            const t = now.toLocaleTimeString('ar-EG-u-nu-latn', { hour12: true, hour: '2-digit', minute: '2-digit' });
+            return `${d} - ${t}`;
+        }
+
+        function normalizeName(str) {
+            return str
+                .trim()
+                .toLowerCase()
+                .replace(/\s+/g, ' ')
+                .replace(/[\u064B-\u0652]/g, '')   // إزالة التشكيل
+                .replace(/[أإآء]/g, 'ا')
+                .replace(/ة/g, 'ه')
+                .replace(/ى/g, 'ي');
+        }
+
+        function confirmSale(invIdx) {
+            const item = state.inventory[invIdx];
+            const nameEl = document.getElementById('custName');
+            const downEl = document.getElementById('downPay');
+            const name = nameEl.value.trim();
+            let down = parseFloat(downEl.value);
+            if(isNaN(down) || down < 0) down = 0;
+
+            if(!name){ alert('الرجاء إدخال اسم الزبون'); return; }
+            if(down > item.price){ alert('الدفعة الأولى أكبر من سعر المادة'); return; }
+
+            const existingIdx = state.sales.findIndex(c => normalizeName(c.name) === normalizeName(name));
+
+            if(existingIdx !== -1){
+                const c = state.sales[existingIdx];
+                c.items.push({name: item.name, price: item.price});
+                c.total += item.price;
+                c.remaining += item.price;
+                if(down > 0){
+                    c.paid += down;
+                    c.remaining -= down;
+                    c.payments.push({amount: down, stamp: nowStamp()});
+                }
+                save();
+                alert(`تمت إضافة "${item.name}" لحساب الزبون "${c.name}" الموجود مسبقاً.`);
+                showCustDetails(existingIdx);
+                openDrawer();
+                return;
+            }
+
+            state.sales.push({
+                name: name,
+                items: [{name: item.name, price: item.price}],
+                total: item.price,
+                paid: down,
+                remaining: item.price - down,
+                payments: down > 0 ? [{amount: down, stamp: nowStamp()}] : []
+            });
+            save();
+            renderSection('customers');
+        }
+
+        // ---------- الزبائن ----------
+        function showCustDetails(i) {
+            const c = state.sales[i];
+            const content = document.getElementById('drawerContent');
+            document.getElementById('drawerTitle').innerText = c.name;
+
+            const itemsHtml = `
+                <div class="mb-2 text-sm text-gray-500 font-bold">المواد المشتراة</div>
+                <div class="mb-4">
+                    ${c.items.map(it => `
+                        <div class="flex justify-between text-sm p-2 bg-gray-50 dark:bg-gray-700 dark:text-white rounded mb-1">
+                            <span>${it.name}</span>
+                            <span class="text-gray-500 dark:text-gray-300">${it.price} د.ع</span>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+
+            const historyHtml = c.payments.length ? `
+                <div class="mb-2 text-sm text-gray-500 font-bold">سجل الدفعات</div>
+                <div class="mb-4 max-h-40 overflow-y-auto">
+                    ${[...c.payments].reverse().map(p => `
+                        <div class="p-2 bg-gray-50 dark:bg-gray-700 dark:text-white rounded mb-1">
+                            <div class="flex justify-between text-sm">
+                                <span class="text-green-600 font-bold">${p.amount} د.ع</span>
+                                <span class="text-gray-400">${p.stamp || p.date || ''}</span>
+                            </div>
+                            ${p.note ? `<div class="text-xs text-gray-500 dark:text-gray-300 mt-1">📝 ${p.note}</div>` : ''}
+                        </div>
+                    `).join('')}
+                </div>
+            ` : `<div class="mb-4 text-sm text-gray-400">لا توجد دفعات مسجلة بعد</div>`;
+
+            content.innerHTML = `
+                ${itemsHtml}
+                <div class="mb-2 dark:text-white">السعر الكلي: <b>${c.total}</b> د.ع</div>
+                <div class="mb-2 dark:text-white">المدفوع: <b class="text-green-600">${c.paid}</b> د.ع</div>
+                <div class="mb-4 dark:text-white">المتبقي: <b class="text-red-600">${c.remaining}</b> د.ع</div>
+                <button onclick="addItemToCustomer(${i})" class="w-full bg-teal-700 text-white p-2 rounded mb-2">➕ إضافة مادة أخرى لهذا الزبون</button>
+                ${historyHtml}
+                ${c.remaining > 0 ? `
+                    <input id="payAmount" type="number" placeholder="مبلغ الدفعة" class="w-full p-2 border rounded mb-2">
+                    <input id="payNote" placeholder="ملاحظة (اختياري)" class="w-full p-2 border rounded mb-2">
+                    <button onclick="payDebt(${i})" class="w-full bg-teal-600 text-white p-2 rounded mb-2">تسديد دفعة</button>
+                ` : `<div class="text-green-700 font-bold mb-2">تم التسديد بالكامل ✓</div>`}
+                <button onclick="deleteCust(${i})" class="w-full bg-red-500 text-white p-2 rounded">حذف الزبون</button>
+                <button onclick="renderSection('customers')" class="w-full bg-gray-50 text-gray-700 p-2 rounded mt-2">رجوع لقائمة الزبائن</button>
+            `;
+        }
+
+        function addItemToCustomer(i) {
+            const c = state.sales[i];
+            const content = document.getElementById('drawerContent');
+            document.getElementById('drawerTitle').innerText = "إضافة مادة لـ " + c.name;
+
+            if(state.inventory.length === 0){
+                content.innerHTML = `<p class="text-gray-400 text-center mb-3">لا توجد مواد بالمخزن.</p>
+                    <button onclick="showCustDetails(${i})" class="w-full bg-gray-50 text-gray-700 p-2 rounded">رجوع</button>`;
+                return;
+            }
+
+            content.innerHTML = state.inventory.map((item, idx) => `
+                <div class="p-4 bg-teal-50 dark:bg-gray-700 dark:text-white mb-2 rounded-xl flex justify-between items-center">
+                    <span>${item.name} <span class="text-gray-500 text-sm">(${item.price} د.ع)</span></span>
+                    <button onclick="confirmAddItem(${i}, ${idx})" class="bg-teal-600 text-white px-3 py-1 rounded">إضافة</button>
+                </div>
+            `).join('') + `<button onclick="showCustDetails(${i})" class="w-full bg-gray-50 text-gray-700 p-2 rounded mt-2">رجوع</button>`;
+        }
+
+        function confirmAddItem(custIdx, invIdx) {
+            const c = state.sales[custIdx];
+            const item = state.inventory[invIdx];
+            c.items.push({name: item.name, price: item.price});
+            c.total += item.price;
+            c.remaining += item.price;
+            save();
+            showCustDetails(custIdx);
+        }
+
+        function payDebt(i) {
+            const amountEl = document.getElementById('payAmount');
+            const noteEl = document.getElementById('payNote');
+            let amount = parseFloat(amountEl.value);
+            const note = noteEl.value.trim();
+            const c = state.sales[i];
+
+            if(isNaN(amount) || amount <= 0){ alert('الرجاء إدخال مبلغ صحيح'); return; }
+            if(amount > c.remaining){ alert('المبلغ أكبر من المتبقي'); return; }
+
+            c.paid += amount;
+            c.remaining -= amount;
+            c.payments.push({amount, stamp: nowStamp(), note});
+            save();
+            showCustDetails(i);
+        }
+
+        function deleteCust(i) {
+            if(!confirm('هل أنت متأكد من حذف هذا الزبون؟')) return;
+            state.sales.splice(i, 1);
+            save();
+            renderSection('customers');
+        }
+
+        // ---------- تصدير / استيراد نسخة احتياطية ----------
+        function exportBackup() {
+            const backup = {
+                exportedAt: new Date().toISOString(),
+                sales: state.sales,
+                inventory: state.inventory
+            };
+            const blob = new Blob([JSON.stringify(backup, null, 2)], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            const dateStr = new Date().toISOString().slice(0, 10);
+            a.href = url;
+            a.download = `نسخة-احتياطية-${dateStr}.json`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        }
+
+        function importBackup(event) {
+            const file = event.target.files[0];
+            if(!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                let data;
+                try {
+                    data = JSON.parse(e.target.result);
+                } catch(err) {
+                    alert('الملف غير صالح، تأكد إنه ملف نسخة احتياطية صحيح (JSON).');
+                    event.target.value = '';
+                    return;
+                }
+
+                if(!Array.isArray(data.sales) || !Array.isArray(data.inventory)){
+                    alert('صيغة الملف غير متوافقة مع نظام النسخ الاحتياطي.');
+                    event.target.value = '';
+                    return;
+                }
+
+                if(!confirm('استيراد هذي النسخة رح يستبدل كل البيانات الحالية (المخزن + الزبائن). متأكد تريد تكمل؟')) {
+                    event.target.value = '';
+                    return;
+                }
+
+                state.sales = data.sales;
+                state.inventory = data.inventory;
+                save();
+                alert('تم استيراد النسخة الاحتياطية بنجاح ✓');
+                renderSection('settings');
+            };
+            reader.readAsText(file, 'utf-8');
+        }
+
+        // ---------- البحث الفوري (زبائن + مواد) ----------
+        function liveSearch(q) {
+            const box = document.getElementById('searchResults');
+            q = q.trim().toLowerCase();
+
+            if(!q){ box.classList.add('hidden'); box.innerHTML = ''; return; }
+
+            const matchedItems = state.inventory
+                .map((item, idx) => ({...item, idx}))
+                .filter(item => item.name.toLowerCase().includes(q));
+
+            const matchedCustomers = state.sales
+                .map((c, idx) => ({...c, idx}))
+                .filter(c => c.name.toLowerCase().includes(q) || c.items.some(it => it.name.toLowerCase().includes(q)));
+
+            if(matchedItems.length === 0 && matchedCustomers.length === 0){
+                box.innerHTML = `<div class="p-3 text-gray-400 text-sm">لا توجد نتائج</div>`;
+                box.classList.remove('hidden');
+                return;
+            }
+
+            let html = '';
+            if(matchedCustomers.length){
+                html += `<div class="px-3 pt-2 pb-1 text-xs text-gray-400 font-bold">الزبائن</div>`;
+                html += matchedCustomers.map(c => `
+                    <div onclick="searchSelectCustomer(${c.idx})" class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-white cursor-pointer flex justify-between items-center border-b dark:border-gray-600">
+                        <span>👤 ${c.name} <span class="text-gray-400 text-xs">(${c.items.map(it => it.name).join('، ')})</span></span>
+                        <span class="${c.remaining > 0 ? 'text-red-600' : 'text-green-600'} text-xs font-bold">${c.remaining > 0 ? c.remaining + ' متبقي' : 'مسدد'}</span>
+                    </div>
+                `).join('');
+            }
+            if(matchedItems.length){
+                html += `<div class="px-3 pt-2 pb-1 text-xs text-gray-400 font-bold">المواد</div>`;
+                html += matchedItems.map(item => `
+                    <div onclick="searchSelectItem(${item.idx})" class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-white cursor-pointer flex justify-between items-center border-b dark:border-gray-600">
+                        <span>📦 ${item.name}</span>
+                        <span class="text-gray-400 text-xs">${item.price} د.ع</span>
+                    </div>
+                `).join('');
+            }
+
+            box.innerHTML = html;
+            box.classList.remove('hidden');
+        }
+
+        function clearSearch() {
+            document.getElementById('globalSearch').value = '';
+            document.getElementById('searchResults').classList.add('hidden');
+            document.getElementById('searchResults').innerHTML = '';
+        }
+
+        function searchSelectCustomer(idx) {
+            showCustDetails(idx);
+            openDrawer();
+            clearSearch();
+        }
+
+        function searchSelectItem(idx) {
+            addSaleForm(idx);
+            openDrawer();
+            clearSearch();
+        }
+
+        // إغلاق نتائج البحث عند الضغط خارجها
+        document.addEventListener('click', function(e) {
+            const wrap = document.getElementById('globalSearch');
+            const box = document.getElementById('searchResults');
+            if(wrap && box && !wrap.contains(e.target) && !box.contains(e.target)){
+                box.classList.add('hidden');
+            }
+        });
+
+        function updateClockAndDate() {
+            const now = new Date();
+            document.getElementById('liveClock').innerText = now.toLocaleTimeString('ar-EG-u-nu-latn', {
+                hour12: true, hour: '2-digit', minute: '2-digit', second: '2-digit'
+            });
+            document.getElementById('liveDate').innerText = now.toLocaleDateString('ar-EG-u-nu-latn', {
+                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+            });
+        }
+        updateClockAndDate();
+        setInterval(updateClockAndDate, 1000);
+    </script>
+</body>
+</html>
