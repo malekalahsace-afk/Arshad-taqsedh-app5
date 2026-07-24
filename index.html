@@ -13,7 +13,10 @@ input{font:inherit}
 /* Layout */
 .flex{display:flex}
 .hidden{display:none}
+.contents{display:contents}
 .absolute{position:absolute}
+.fixed{position:fixed}
+.inset-0{top:0;right:0;bottom:0;left:0}
 .relative{position:relative}
 .flex-1{flex:1 1 0%}
 .flex-col{flex-direction:column}
@@ -37,6 +40,13 @@ input{font:inherit}
 .max-h-40{max-height:10rem}
 .max-h-72{max-height:18rem}
 .max-h-\[65vh\]{max-height:65vh}
+.max-w-sm{max-width:24rem}
+.p-6{padding:1.5rem}
+.font-mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.tracking-widest{letter-spacing:.1em}
+.uppercase{text-transform:uppercase}
+.select-all{-webkit-user-select:all;user-select:all}
+.z-\[9999\]{z-index:9999}
 
 /* Spacing */
 .p-1{padding:.25rem}
@@ -154,6 +164,28 @@ input{font:inherit}
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 h-screen flex flex-col md:flex-row">
 
+    <div id="activationGate" class="fixed inset-0 z-[9999] bg-gray-900 flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 w-full max-w-sm text-center">
+            <div class="text-4xl mb-2">🔒</div>
+            <h2 class="text-lg font-bold mb-1 dark:text-white">تفعيل البرنامج</h2>
+            <p class="text-sm text-gray-500 dark:text-gray-300 mb-4">أرسل رمز الجهاز التالي للمطوّر واحصل على كود التفعيل</p>
+
+            <div class="mb-4">
+                <div class="text-xs text-gray-400 mb-1">رمز الجهاز</div>
+                <div class="flex gap-2">
+                    <div id="deviceIdDisplay" class="flex-1 font-mono text-lg tracking-widest bg-gray-100 dark:bg-gray-700 dark:text-white rounded-lg p-3 select-all">-</div>
+                    <button onclick="copyDeviceId()" class="bg-gray-500 text-white px-3 rounded-lg text-sm shrink-0">نسخ</button>
+                </div>
+            </div>
+
+            <input id="activationCodeInput" placeholder="أدخل كود التفعيل هنا" class="w-full p-3 border rounded-lg mb-2 text-center font-mono tracking-widest uppercase">
+            <div id="activationError" class="text-red-600 text-sm mb-2 hidden">كود التفعيل غير صحيح، حاول مرة ثانية</div>
+            <button onclick="verifyActivation()" class="w-full bg-teal-600 text-white p-3 rounded-lg font-bold">تفعيل</button>
+        </div>
+    </div>
+
+    <div id="appRoot" class="hidden contents">
+
     <aside class="w-full md:w-32 bg-white dark:bg-gray-800 border-t md:border-l border-gray-200 dark:border-gray-700 flex flex-col shadow-lg z-40">
         <div class="relative p-2 border-b border-gray-200 dark:border-gray-700">
             <input id="globalSearch" oninput="liveSearch(this.value)" placeholder="🔍 بحث زبون / مادة"
@@ -190,7 +222,112 @@ input{font:inherit}
         <p class="text-gray-400 mt-2">اختر قسم من القائمة</p>
     </main>
 
+    </div>
+
     <script>
+        // ==================== نظام التفعيل ====================
+        // ⚠️ نفس المفتاح والأبجدية بالضبط الموجودة بمولّد الأكواد الخاص بالمطوّر.
+        // لازم يبقوا متطابقين تماماً وإلا الأكواد ما تشتغل.
+        const ACTIVATION_SECRET_KEY = '11d35eb9ea09807fe10f2fa63a4df598a14ae0190d205cccef35257954e8529c';
+        const ACTIVATION_CODE_ALPHABET = '23456789ABCDEFGHJKMNPQRSTUVWXYZ';
+
+        async function sha256Hex(plainText) {
+            const bytes = new TextEncoder().encode(plainText);
+            const digest = await crypto.subtle.digest('SHA-256', bytes);
+            return Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        async function computeActivationCode(deviceId) {
+            const hashHex = await sha256Hex(deviceId + '|' + ACTIVATION_SECRET_KEY);
+            let code = '';
+            for (let i = 0; i < 8; i++) {
+                const byte = parseInt(hashHex.substr(i * 2, 2), 16);
+                code += ACTIVATION_CODE_ALPHABET[byte % ACTIVATION_CODE_ALPHABET.length];
+            }
+            return code.slice(0, 4) + '-' + code.slice(4, 8);
+        }
+
+        function generateDeviceId() {
+            const bytes = new Uint8Array(8);
+            crypto.getRandomValues(bytes);
+            let id = '';
+            for (let i = 0; i < bytes.length; i++) {
+                id += ACTIVATION_CODE_ALPHABET[bytes[i] % ACTIVATION_CODE_ALPHABET.length];
+            }
+            return id.slice(0, 4) + '-' + id.slice(4, 8);
+        }
+
+        function getOrCreateDeviceId() {
+            let id = localStorage.getItem('deviceId');
+            if (!id) {
+                id = generateDeviceId();
+                localStorage.setItem('deviceId', id);
+            }
+            return id;
+        }
+
+        function normalizeCode(str) {
+            return str.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+        }
+
+        function showApp() {
+            document.getElementById('activationGate').classList.add('hidden');
+            document.getElementById('appRoot').classList.remove('hidden');
+        }
+
+        async function verifyActivation() {
+            const input = document.getElementById('activationCodeInput');
+            const errorEl = document.getElementById('activationError');
+            const deviceId = localStorage.getItem('deviceId');
+            const entered = normalizeCode(input.value);
+
+            if (!entered) { errorEl.textContent = 'الرجاء إدخال كود التفعيل'; errorEl.classList.remove('hidden'); return; }
+
+            const expected = normalizeCode(await computeActivationCode(deviceId));
+
+            if (entered === expected) {
+                localStorage.setItem('activated', 'true');
+                localStorage.setItem('activatedDeviceId', deviceId);
+                showApp();
+            } else {
+                errorEl.textContent = 'كود التفعيل غير صحيح، حاول مرة ثانية';
+                errorEl.classList.remove('hidden');
+            }
+        }
+
+        function copyDeviceId() {
+            const id = localStorage.getItem('deviceId') || '';
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(id).then(() => alert('تم نسخ رمز الجهاز'));
+            } else {
+                alert('انسخ الرمز يدوياً: ' + id);
+            }
+        }
+
+        (function initActivation() {
+            if (!window.crypto || !window.crypto.subtle) {
+                document.getElementById('activationGate').innerHTML =
+                    '<div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm text-center">' +
+                    '<div class="text-4xl mb-2">⚠️</div>' +
+                    '<p class="text-sm">نظام التفعيل يحتاج فتح الصفحة عبر رابط آمن (https)، مو من ملف محلي مباشرة.</p></div>';
+                return;
+            }
+            const deviceId = getOrCreateDeviceId();
+            document.getElementById('deviceIdDisplay').textContent = deviceId;
+
+            const alreadyActivated = localStorage.getItem('activated') === 'true'
+                && localStorage.getItem('activatedDeviceId') === deviceId;
+
+            if (alreadyActivated) {
+                showApp();
+            } else {
+                document.getElementById('activationCodeInput').addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') verifyActivation();
+                });
+            }
+        })();
+        // ==================== نهاية نظام التفعيل ====================
+
         let state = {
             sales: (JSON.parse(localStorage.getItem('mySales')) || []).map(c =>
                 c.items ? c : {...c, items: [{name: c.item, price: c.total}]}
