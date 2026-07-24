@@ -12,6 +12,8 @@ input{font:inherit}
 
 /* Layout */
 .flex{display:flex}
+.grid{display:grid}
+.grid-cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
 .hidden{display:none}
 .contents{display:contents}
 .absolute{position:absolute}
@@ -38,6 +40,7 @@ input{font:inherit}
 .w-20{width:5rem}
 .h-screen{height:100vh}
 .max-h-40{max-height:10rem}
+.max-h-48{max-height:12rem}
 .max-h-72{max-height:18rem}
 .max-h-\[65vh\]{max-height:65vh}
 .max-w-sm{max-width:24rem}
@@ -118,6 +121,7 @@ input{font:inherit}
 .text-green-700{color:#15803d}
 .text-red-500{color:#ef4444}
 .text-red-600{color:#dc2626}
+.text-orange-600{color:#ea580c}
 .text-teal-600{color:#0d9488}
 
 /* Typography */
@@ -152,6 +156,14 @@ input{font:inherit}
     .md\:flex-col{flex-direction:column}
     .md\:flex-row{flex-direction:row}
     .md\:border-l{border-left-width:1px}
+}
+
+/* الطباعة / حفظ PDF */
+#printArea { font-family: Tahoma, Arial, sans-serif; direction: rtl; }
+@media print {
+    body * { visibility: hidden; }
+    #printArea, #printArea * { visibility: visible; }
+    #printArea { display: block !important; position: absolute; top: 0; right: 0; left: 0; width: 100%; padding: 20px; color: #000; background: #fff; }
 }
     </style>
     <link rel="manifest" href="manifest.json">
@@ -225,6 +237,9 @@ input{font:inherit}
             <button onclick="renderSection('customers')" class="p-4 bg-gray-50 dark:bg-gray-700 rounded-2xl hover:bg-teal-100 transition-all text-2xl flex flex-col items-center gap-1">
                 👥 <span class="dark:text-white text-[10px] font-bold">الزبائن</span>
             </button>
+            <button onclick="renderSection('reports')" class="p-4 bg-gray-50 dark:bg-gray-700 rounded-2xl hover:bg-teal-100 transition-all text-2xl flex flex-col items-center gap-1">
+                📈 <span class="dark:text-white text-[10px] font-bold">التقارير</span>
+            </button>
             <button onclick="renderSection('settings')" class="p-4 bg-gray-50 dark:bg-gray-700 rounded-2xl hover:bg-teal-100 transition-all text-2xl flex flex-col items-center gap-1">
                 ⚙️ <span class="dark:text-white text-[10px] font-bold">الإعدادات</span>
             </button>
@@ -251,6 +266,8 @@ input{font:inherit}
 
         <div id="appVersion" class="absolute bottom-3 left-1/2 -translate-x-1/2 text-xs text-gray-400 dark:text-gray-500"></div>
     </main>
+
+    <div id="printArea" class="hidden"></div>
 
     <div id="updateBanner" class="hidden fixed bottom-4 left-1/2 -translate-x-1/2 z-[9998] bg-teal-700 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 text-sm">
         <span>🔄 يتوفر تحديث جديد للتطبيق</span>
@@ -406,18 +423,23 @@ input{font:inherit}
                     if(state.inventory.length === 0){
                         content.innerHTML = `<p class="text-gray-400 text-center">لا توجد مواد بالمخزن بعد. أضف مواد من قسم "المخزن" أولاً.</p>`;
                     } else {
-                        content.innerHTML = state.inventory.map((i, idx) =>
-                            `<div class="p-4 bg-teal-50 dark:bg-gray-700 dark:text-white mb-2 rounded-xl flex justify-between items-center">
-                                <span>${i.name} <span class="text-gray-500 text-sm">(${i.price} د.ع)</span></span>
-                                <button onclick="addSaleForm(${idx})" class="bg-teal-600 text-white px-3 py-1 rounded">بيع</button>
-                            </div>`
-                        ).join('');
+                        content.innerHTML = state.inventory.map((i, idx) => {
+                            const outOfStock = i.qty !== null && i.qty !== undefined && i.qty <= 0;
+                            return `<div class="p-4 bg-teal-50 dark:bg-gray-700 dark:text-white mb-2 rounded-xl flex justify-between items-center">
+                                <span>${i.name} <span class="text-gray-500 text-sm">(${i.price} د.ع)</span><div>${qtyBadge(i)}</div></span>
+                                ${outOfStock
+                                    ? `<span class="text-red-600 text-sm font-bold">غير متوفرة</span>`
+                                    : `<button onclick="addSaleForm(${idx})" class="bg-teal-600 text-white px-3 py-1 rounded">بيع</button>`
+                                }
+                            </div>`;
+                        }).join('');
                     }
                     break;
                 case 'inventory':
                     title.innerText = "المخزن";
                     content.innerHTML = `<input id="invName" placeholder="اسم المادة" class="w-full p-2 border rounded mb-2">
                         <input id="invPrice" type="number" placeholder="سعر البيع" class="w-full p-2 border rounded mb-2">
+                        <input id="invQty" type="number" placeholder="الكمية المتوفرة (اتركه فارغ لو غير محدودة)" class="w-full p-2 border rounded mb-2">
                         <button onclick="saveInv()" class="w-full bg-orange-600 text-white p-2 rounded">إضافة</button>
                         <div id="invList" class="mt-4"></div>`;
                     renderInvList();
@@ -437,6 +459,10 @@ input{font:inherit}
                         ).join('');
                     }
                     break;
+                case 'reports':
+                    title.innerText = "التقارير";
+                    content.innerHTML = renderReports();
+                    break;
                 case 'settings':
                     title.innerText = "الإعدادات";
                     content.innerHTML = `
@@ -455,21 +481,36 @@ input{font:inherit}
         function saveInv() {
             const nameEl = document.getElementById('invName');
             const priceEl = document.getElementById('invPrice');
+            const qtyEl = document.getElementById('invQty');
             const name = nameEl.value.trim();
             const price = parseFloat(priceEl.value);
+            const qtyRaw = qtyEl.value.trim();
+            const qty = qtyRaw === '' ? null : parseInt(qtyRaw);
 
             if(!name){ alert('الرجاء إدخال اسم المادة'); return; }
             if(isNaN(price) || price <= 0){ alert('الرجاء إدخال سعر صحيح'); return; }
+            if(qtyRaw !== '' && (isNaN(qty) || qty < 0)){ alert('الرجاء إدخال كمية صحيحة (أو اتركها فارغة)'); return; }
 
-            state.inventory.push({name, price});
+            state.inventory.push({name, price, qty});
             save();
-            nameEl.value = ''; priceEl.value = '';
+            nameEl.value = ''; priceEl.value = ''; qtyEl.value = '';
             renderInvList();
         }
+
+        function qtyBadge(item) {
+            if(item.qty === null || item.qty === undefined) return '';
+            if(item.qty <= 0) return `<span class="text-red-600 text-xs font-bold">نفدت الكمية</span>`;
+            if(item.qty <= 2) return `<span class="text-orange-600 text-xs font-bold">الكمية منخفضة: ${item.qty}</span>`;
+            return `<span class="text-gray-400 text-xs">الكمية: ${item.qty}</span>`;
+        }
+
         function renderInvList() {
             document.getElementById('invList').innerHTML = state.inventory.map((i, idx) =>
                 `<div id="invRow-${idx}" class="p-2 border-b dark:border-gray-700 dark:text-white flex justify-between items-center gap-2">
-                    <span onclick="editInv(${idx})" class="cursor-pointer flex-1">${i.name} - ${i.price} د.ع</span>
+                    <span onclick="editInv(${idx})" class="cursor-pointer flex-1">
+                        ${i.name} - ${i.price} د.ع
+                        <div>${qtyBadge(i)}</div>
+                    </span>
                     <button onclick="editInv(${idx})" class="text-teal-600 text-sm shrink-0">تعديل</button>
                     <button onclick="deleteInv(${idx})" class="text-red-500 text-sm shrink-0">حذف</button>
                 </div>`
@@ -488,6 +529,7 @@ input{font:inherit}
             row.innerHTML = `
                 <input id="editName-${idx}" value="${item.name}" class="flex-1 p-1 text-sm border rounded">
                 <input id="editPrice-${idx}" type="number" value="${item.price}" class="w-20 p-1 text-sm border rounded">
+                <input id="editQty-${idx}" type="number" value="${item.qty === null || item.qty === undefined ? '' : item.qty}" placeholder="الكمية" class="w-20 p-1 text-sm border rounded">
                 <button onclick="saveEditInv(${idx})" class="text-green-600 text-sm shrink-0">حفظ</button>
                 <button onclick="renderInvList()" class="text-gray-500 text-sm shrink-0">إلغاء</button>
             `;
@@ -495,11 +537,14 @@ input{font:inherit}
         function saveEditInv(idx) {
             const name = document.getElementById('editName-' + idx).value.trim();
             const price = parseFloat(document.getElementById('editPrice-' + idx).value);
+            const qtyRaw = document.getElementById('editQty-' + idx).value.trim();
+            const qty = qtyRaw === '' ? null : parseInt(qtyRaw);
 
             if(!name){ alert('الرجاء إدخال اسم المادة'); return; }
             if(isNaN(price) || price <= 0){ alert('الرجاء إدخال سعر صحيح'); return; }
+            if(qtyRaw !== '' && (isNaN(qty) || qty < 0)){ alert('الرجاء إدخال كمية صحيحة (أو اتركها فارغة)'); return; }
 
-            state.inventory[idx] = {name, price};
+            state.inventory[idx] = {name, price, qty};
             save();
             renderInvList();
         }
@@ -527,6 +572,74 @@ input{font:inherit}
             return `${d} - ${t}`;
         }
 
+        function renderReports() {
+            const totalSales = state.sales.reduce((sum, c) => sum + c.total, 0);
+            const totalCollected = state.sales.reduce((sum, c) => sum + c.paid, 0);
+            const totalDebt = state.sales.reduce((sum, c) => sum + c.remaining, 0);
+            const custCount = state.sales.length;
+            const debtorsCount = state.sales.filter(c => c.remaining > 0).length;
+            const paidOffCount = custCount - debtorsCount;
+
+            const topDebtors = state.sales
+                .map((c, idx) => ({...c, idx}))
+                .filter(c => c.remaining > 0)
+                .sort((a, b) => b.remaining - a.remaining)
+                .slice(0, 5);
+
+            const invCount = state.inventory.length;
+            const invValue = state.inventory.reduce((sum, i) => sum + i.price, 0);
+            const outOfStockCount = state.inventory.filter(i => i.qty !== null && i.qty !== undefined && i.qty <= 0).length;
+            const lowStockCount = state.inventory.filter(i => i.qty !== null && i.qty !== undefined && i.qty > 0 && i.qty <= 2).length;
+
+            const collectedPct = totalSales > 0 ? Math.round((totalCollected / totalSales) * 100) : 0;
+
+            const statCard = (label, value, colorClass) => `
+                <div class="bg-gray-50 dark:bg-gray-700 dark:text-white rounded-xl p-3 text-center">
+                    <div class="text-xs text-gray-500 dark:text-gray-300 mb-1">${label}</div>
+                    <div class="text-lg font-bold ${colorClass || ''}">${value}</div>
+                </div>
+            `;
+
+            const topDebtorsHtml = topDebtors.length ? `
+                <div class="mb-2 text-sm text-gray-500 font-bold">أكثر 5 زبائن ديناً</div>
+                <div class="mb-4">
+                    ${topDebtors.map(c => `
+                        <div onclick="showCustDetails(${c.idx})" class="flex justify-between items-center text-sm p-2 bg-gray-50 dark:bg-gray-700 dark:text-white rounded mb-1 cursor-pointer">
+                            <span>👤 ${c.name}</span>
+                            <span class="text-red-600 font-bold">${c.remaining} د.ع</span>
+                        </div>
+                    `).join('')}
+                </div>
+            ` : '';
+
+            return `
+                <div class="grid grid-cols-2 gap-2 mb-4">
+                    ${statCard('إجمالي المبيعات', totalSales + ' د.ع', 'text-gray-700 dark:text-white')}
+                    ${statCard('المحصّل', totalCollected + ' د.ع', 'text-green-600')}
+                    ${statCard('الديون المتبقية', totalDebt + ' د.ع', 'text-red-600')}
+                    ${statCard('نسبة التحصيل', collectedPct + '%', 'text-teal-600')}
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 mb-4">
+                    ${statCard('عدد الزبائن', custCount)}
+                    ${statCard('عليهم ديون', debtorsCount, 'text-red-600')}
+                    ${statCard('مسددين بالكامل', paidOffCount, 'text-green-600')}
+                    ${statCard('عدد مواد المخزن', invCount)}
+                </div>
+
+                <div class="mb-4">
+                    ${statCard('قيمة كل مواد المخزن الحالية', invValue + ' د.ع')}
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 mb-4">
+                    ${statCard('مواد نفدت كميتها', outOfStockCount, outOfStockCount > 0 ? 'text-red-600' : '')}
+                    ${statCard('مواد كميتها منخفضة', lowStockCount, lowStockCount > 0 ? 'text-orange-600' : '')}
+                </div>
+
+                ${topDebtorsHtml}
+            `;
+        }
+
         function normalizeName(str) {
             return str
                 .trim()
@@ -548,6 +661,7 @@ input{font:inherit}
 
             if(!name){ alert('الرجاء إدخال اسم الزبون'); return; }
             if(down > item.price){ alert('الدفعة الأولى أكبر من سعر المادة'); return; }
+            if(item.qty !== null && item.qty !== undefined && item.qty <= 0){ alert('هذي المادة نفدت كميتها بالمخزن'); return; }
 
             const existingIdx = state.sales.findIndex(c => normalizeName(c.name) === normalizeName(name));
 
@@ -561,12 +675,15 @@ input{font:inherit}
                     c.remaining -= down;
                     c.payments.push({amount: down, stamp: nowStamp()});
                 }
+                if(item.qty !== null && item.qty !== undefined) item.qty -= 1;
                 save();
                 alert(`تمت إضافة "${item.name}" لحساب الزبون "${c.name}" الموجود مسبقاً.`);
                 showCustDetails(existingIdx);
                 openDrawer();
                 return;
             }
+
+            if(item.qty !== null && item.qty !== undefined) item.qty -= 1;
 
             state.sales.push({
                 name: name,
@@ -600,14 +717,18 @@ input{font:inherit}
 
             const historyHtml = c.payments.length ? `
                 <div class="mb-2 text-sm text-gray-500 font-bold">سجل الدفعات</div>
-                <div class="mb-4 max-h-40 overflow-y-auto">
-                    ${[...c.payments].reverse().map(p => `
-                        <div class="p-2 bg-gray-50 dark:bg-gray-700 dark:text-white rounded mb-1">
-                            <div class="flex justify-between text-sm">
+                <div class="mb-4 max-h-48 overflow-y-auto">
+                    ${c.payments.map((p, idx) => ({...p, idx})).reverse().map(p => `
+                        <div id="payRow-${i}-${p.idx}" class="p-2 bg-gray-50 dark:bg-gray-700 dark:text-white rounded mb-1">
+                            <div class="flex justify-between items-center text-sm">
                                 <span class="text-green-600 font-bold">${p.amount} د.ع</span>
-                                <span class="text-gray-400">${p.stamp || p.date || ''}</span>
+                                <span class="text-gray-400 text-xs">${p.stamp || p.date || ''}</span>
                             </div>
                             ${p.note ? `<div class="text-xs text-gray-500 dark:text-gray-300 mt-1">📝 ${p.note}</div>` : ''}
+                            <div class="flex gap-3 mt-1">
+                                <button onclick="editPaymentEntry(${i}, ${p.idx})" class="text-teal-600 text-xs">✏️ تعديل</button>
+                                <button onclick="deletePaymentEntry(${i}, ${p.idx})" class="text-red-500 text-xs">🗑️ حذف</button>
+                            </div>
                         </div>
                     `).join('')}
                 </div>
@@ -625,6 +746,7 @@ input{font:inherit}
                     <input id="payNote" placeholder="ملاحظة (اختياري)" class="w-full p-2 border rounded mb-2">
                     <button onclick="payDebt(${i})" class="w-full bg-teal-600 text-white p-2 rounded mb-2">تسديد دفعة</button>
                 ` : `<div class="text-green-700 font-bold mb-2">تم التسديد بالكامل ✓</div>`}
+                <button onclick="printCustomerStatement(${i})" class="w-full bg-gray-500 text-white p-2 rounded mb-2">🖨️ طباعة / حفظ PDF لكشف الحساب</button>
                 <button onclick="deleteCust(${i})" class="w-full bg-red-500 text-white p-2 rounded">حذف الزبون</button>
                 <button onclick="renderSection('customers')" class="w-full bg-gray-50 text-gray-700 p-2 rounded mt-2">رجوع لقائمة الزبائن</button>
             `;
@@ -641,20 +763,26 @@ input{font:inherit}
                 return;
             }
 
-            content.innerHTML = state.inventory.map((item, idx) => `
-                <div class="p-4 bg-teal-50 dark:bg-gray-700 dark:text-white mb-2 rounded-xl flex justify-between items-center">
-                    <span>${item.name} <span class="text-gray-500 text-sm">(${item.price} د.ع)</span></span>
-                    <button onclick="confirmAddItem(${i}, ${idx})" class="bg-teal-600 text-white px-3 py-1 rounded">إضافة</button>
-                </div>
-            `).join('') + `<button onclick="showCustDetails(${i})" class="w-full bg-gray-50 text-gray-700 p-2 rounded mt-2">رجوع</button>`;
+            content.innerHTML = state.inventory.map((item, idx) => {
+                const outOfStock = item.qty !== null && item.qty !== undefined && item.qty <= 0;
+                return `<div class="p-4 bg-teal-50 dark:bg-gray-700 dark:text-white mb-2 rounded-xl flex justify-between items-center">
+                    <span>${item.name} <span class="text-gray-500 text-sm">(${item.price} د.ع)</span><div>${qtyBadge(item)}</div></span>
+                    ${outOfStock
+                        ? `<span class="text-red-600 text-sm font-bold">غير متوفرة</span>`
+                        : `<button onclick="confirmAddItem(${i}, ${idx})" class="bg-teal-600 text-white px-3 py-1 rounded">إضافة</button>`
+                    }
+                </div>`;
+            }).join('') + `<button onclick="showCustDetails(${i})" class="w-full bg-gray-50 text-gray-700 p-2 rounded mt-2">رجوع</button>`;
         }
 
         function confirmAddItem(custIdx, invIdx) {
             const c = state.sales[custIdx];
             const item = state.inventory[invIdx];
+            if(item.qty !== null && item.qty !== undefined && item.qty <= 0){ alert('هذي المادة نفدت كميتها بالمخزن'); return; }
             c.items.push({name: item.name, price: item.price});
             c.total += item.price;
             c.remaining += item.price;
+            if(item.qty !== null && item.qty !== undefined) item.qty -= 1;
             save();
             showCustDetails(custIdx);
         }
@@ -674,6 +802,112 @@ input{font:inherit}
             c.payments.push({amount, stamp: nowStamp(), note});
             save();
             showCustDetails(i);
+        }
+
+        function deletePaymentEntry(custIdx, paymentIdx) {
+            const c = state.sales[custIdx];
+            const payment = c.payments[paymentIdx];
+            if(!confirm(`هل أنت متأكد من حذف دفعة بمبلغ ${payment.amount} د.ع؟ رح يرجع هذا المبلغ للمتبقي.`)) return;
+
+            c.paid -= payment.amount;
+            c.remaining += payment.amount;
+            c.payments.splice(paymentIdx, 1);
+            save();
+            showCustDetails(custIdx);
+        }
+
+        function editPaymentEntry(custIdx, paymentIdx) {
+            const c = state.sales[custIdx];
+            const payment = c.payments[paymentIdx];
+            const row = document.getElementById(`payRow-${custIdx}-${paymentIdx}`);
+
+            row.innerHTML = `
+                <input id="editPayAmount-${custIdx}-${paymentIdx}" type="number" value="${payment.amount}" class="w-full p-2 text-sm border rounded mb-1">
+                <input id="editPayNote-${custIdx}-${paymentIdx}" value="${payment.note || ''}" placeholder="ملاحظة (اختياري)" class="w-full p-2 text-sm border rounded mb-1">
+                <div class="flex gap-2">
+                    <button onclick="saveEditPayment(${custIdx}, ${paymentIdx})" class="flex-1 bg-teal-600 text-white text-sm p-1 rounded">حفظ</button>
+                    <button onclick="showCustDetails(${custIdx})" class="flex-1 bg-gray-50 text-gray-700 text-sm p-1 rounded">إلغاء</button>
+                </div>
+            `;
+        }
+
+        function saveEditPayment(custIdx, paymentIdx) {
+            const c = state.sales[custIdx];
+            const payment = c.payments[paymentIdx];
+            const newAmount = parseFloat(document.getElementById(`editPayAmount-${custIdx}-${paymentIdx}`).value);
+            const newNote = document.getElementById(`editPayNote-${custIdx}-${paymentIdx}`).value.trim();
+
+            if(isNaN(newAmount) || newAmount <= 0){ alert('الرجاء إدخال مبلغ صحيح'); return; }
+
+            const delta = newAmount - payment.amount;
+            const newRemaining = c.remaining - delta;
+            if(newRemaining < 0){ alert('المبلغ الجديد أكبر من اللازم، بيخلي المتبقي رقم سالب'); return; }
+
+            c.paid += delta;
+            c.remaining = newRemaining;
+            payment.amount = newAmount;
+            payment.note = newNote;
+            save();
+            showCustDetails(custIdx);
+        }
+
+        function printCustomerStatement(i) {
+            const c = state.sales[i];
+            const printDate = nowStamp();
+
+            const itemsRows = c.items.map(it => `
+                <tr>
+                    <td style="padding:6px 8px;border:1px solid #ccc;">${it.name}</td>
+                    <td style="padding:6px 8px;border:1px solid #ccc;text-align:left;">${it.price} د.ع</td>
+                </tr>
+            `).join('');
+
+            const paymentsRows = c.payments.length ? c.payments.map(p => `
+                <tr>
+                    <td style="padding:6px 8px;border:1px solid #ccc;">${p.stamp || p.date || ''}</td>
+                    <td style="padding:6px 8px;border:1px solid #ccc;text-align:left;">${p.amount} د.ع</td>
+                    <td style="padding:6px 8px;border:1px solid #ccc;">${p.note || ''}</td>
+                </tr>
+            `).join('') : `<tr><td colspan="3" style="padding:8px;border:1px solid #ccc;text-align:center;">لا توجد دفعات مسجلة</td></tr>`;
+
+            document.getElementById('printArea').innerHTML = `
+                <h2 style="margin-bottom:4px;">كشف حساب زبون</h2>
+                <div style="color:#555;font-size:13px;margin-bottom:16px;">تاريخ الطباعة: ${printDate}</div>
+
+                <div style="font-size:16px;font-weight:bold;margin-bottom:12px;">الزبون: ${c.name}</div>
+
+                <table style="width:100%;border-collapse:collapse;margin-bottom:16px;">
+                    <thead>
+                        <tr style="background:#f0f0f0;">
+                            <th style="padding:6px 8px;border:1px solid #ccc;text-align:right;">المادة</th>
+                            <th style="padding:6px 8px;border:1px solid #ccc;text-align:left;">السعر</th>
+                        </tr>
+                    </thead>
+                    <tbody>${itemsRows}</tbody>
+                </table>
+
+                <table style="width:100%;border-collapse:collapse;margin-bottom:16px;">
+                    <tr><td style="padding:6px 8px;border:1px solid #ccc;">السعر الكلي</td><td style="padding:6px 8px;border:1px solid #ccc;text-align:left;">${c.total} د.ع</td></tr>
+                    <tr><td style="padding:6px 8px;border:1px solid #ccc;">المدفوع</td><td style="padding:6px 8px;border:1px solid #ccc;text-align:left;">${c.paid} د.ع</td></tr>
+                    <tr><td style="padding:6px 8px;border:1px solid #ccc;font-weight:bold;">المتبقي</td><td style="padding:6px 8px;border:1px solid #ccc;text-align:left;font-weight:bold;">${c.remaining} د.ع</td></tr>
+                </table>
+
+                <div style="font-weight:bold;margin-bottom:8px;">سجل الدفعات</div>
+                <table style="width:100%;border-collapse:collapse;">
+                    <thead>
+                        <tr style="background:#f0f0f0;">
+                            <th style="padding:6px 8px;border:1px solid #ccc;text-align:right;">التاريخ والوقت</th>
+                            <th style="padding:6px 8px;border:1px solid #ccc;text-align:left;">المبلغ</th>
+                            <th style="padding:6px 8px;border:1px solid #ccc;text-align:right;">ملاحظة</th>
+                        </tr>
+                    </thead>
+                    <tbody>${paymentsRows}</tbody>
+                </table>
+
+                <div style="margin-top:24px;font-size:12px;color:#777;">برمجة وتطوير أ. أرشد رياض فضالة الگروشي — 07811969939</div>
+            `;
+
+            window.print();
         }
 
         function deleteCust(i) {
@@ -809,7 +1043,7 @@ input{font:inherit}
             }
         });
 
-        const APP_VERSION = '1.1.0';
+        const APP_VERSION = '1.5.0';
         document.getElementById('appVersion').textContent = 'الإصدار ' + APP_VERSION;
 
         function updateClockAndDate() {
