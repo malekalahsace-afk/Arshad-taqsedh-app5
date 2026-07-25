@@ -44,6 +44,8 @@ input{font:inherit}
 .max-h-72{max-height:18rem}
 .max-h-\[65vh\]{max-height:65vh}
 .max-w-sm{max-width:24rem}
+.max-w-xs{max-width:20rem}
+.leading-relaxed{line-height:1.625}
 .p-6{padding:1.5rem}
 .font-mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
 .tracking-widest{letter-spacing:.1em}
@@ -284,7 +286,8 @@ input{font:inherit}
             <div class="mt-1" dir="ltr">07811969939</div>
         </div>
 
-        <div id="appVersion" class="absolute bottom-3 left-1/2 -translate-x-1/2 text-xs text-gray-400 dark:text-gray-500"></div>
+        <div id="appVersion" class="mt-6 mb-1 w-full max-w-xs px-4 text-center text-xs text-gray-400 dark:text-gray-500 leading-relaxed"></div>
+        <div id="appVersionNumber" class="text-xs text-gray-400 dark:text-gray-500"></div>
     </main>
 
     <div id="printArea" class="hidden"></div>
@@ -668,6 +671,7 @@ input{font:inherit}
             content.innerHTML = `
                 <div class="mb-3 p-3 bg-gray-50 dark:bg-gray-700 dark:text-white rounded">السعر الكلي: <b>${item.price} د.ع</b></div>
                 <input id="custName" placeholder="اسم الزبون" class="w-full p-2 border rounded mb-2">
+                <input id="custPhone" type="tel" placeholder="رقم هاتف الزبون (اختياري)" class="w-full p-2 border rounded mb-2" dir="ltr">
                 <input id="downPay" type="number" placeholder="الدفعة الأولى (اتركه فارغاً إن لم توجد)" class="w-full p-2 border rounded mb-2">
                 <button onclick="confirmSale(${invIdx})" class="w-full bg-green-600 text-white p-2 rounded">تأكيد البيع</button>
                 <button onclick="renderSection('sales')" class="w-full bg-gray-50 text-gray-700 p-2 rounded mt-2">رجوع</button>
@@ -763,8 +767,10 @@ input{font:inherit}
         function confirmSale(invIdx) {
             const item = state.inventory[invIdx];
             const nameEl = document.getElementById('custName');
+            const phoneEl = document.getElementById('custPhone');
             const downEl = document.getElementById('downPay');
             const name = nameEl.value.trim();
+            const phone = phoneEl.value.trim();
             let down = parseFloat(downEl.value);
             if(isNaN(down) || down < 0) down = 0;
 
@@ -779,6 +785,7 @@ input{font:inherit}
                 c.items.push({name: item.name, price: item.price});
                 c.total += item.price;
                 c.remaining += item.price;
+                if(phone && !c.phone) c.phone = phone;
                 if(down > 0){
                     c.paid += down;
                     c.remaining -= down;
@@ -796,6 +803,7 @@ input{font:inherit}
 
             state.sales.push({
                 name: name,
+                phone: phone,
                 items: [{name: item.name, price: item.price}],
                 total: item.price,
                 paid: down,
@@ -812,6 +820,25 @@ input{font:inherit}
             const c = state.sales[i];
             const content = document.getElementById('drawerContent');
             document.getElementById('drawerTitle').innerText = c.name;
+
+            const cleanPhone = (c.phone || '').replace(/[^0-9+]/g, '');
+            const phoneHtml = c.phone ? `
+                <div class="mb-4">
+                    <div class="flex justify-between items-center text-sm p-2 bg-gray-50 dark:bg-gray-700 dark:text-white rounded mb-2">
+                        <span dir="ltr">📱 ${c.phone}</span>
+                        <button onclick="editCustPhone(${i})" class="text-teal-600 text-xs">تعديل</button>
+                    </div>
+                    <div class="flex gap-2">
+                        <a href="tel:${cleanPhone}" class="flex-1 bg-teal-600 text-white text-center text-sm p-2 rounded">📞 اتصال</a>
+                        <a href="https://wa.me/${cleanPhone}" target="_blank" class="flex-1 bg-green-600 text-white text-center text-sm p-2 rounded">💬 واتساب</a>
+                    </div>
+                </div>
+            ` : `
+                <div id="phoneAddRow-${i}" class="mb-4 flex gap-2">
+                    <input id="newPhoneInput-${i}" type="tel" placeholder="أضف رقم هاتف الزبون" class="flex-1 p-2 border rounded" dir="ltr">
+                    <button onclick="saveCustPhone(${i})" class="bg-teal-600 text-white px-3 rounded text-sm">حفظ</button>
+                </div>
+            `;
 
             const itemsHtml = `
                 <div class="mb-2 text-sm text-gray-500 font-bold">المواد المشتراة</div>
@@ -846,6 +873,7 @@ input{font:inherit}
 
             content.innerHTML = `
                 ${itemsHtml}
+                ${phoneHtml}
                 <div class="mb-2 dark:text-white">السعر الكلي: <b>${c.total}</b> د.ع</div>
                 <div class="mb-2 dark:text-white">المدفوع: <b class="text-green-600">${c.paid}</b> د.ع</div>
                 <div class="mb-4 dark:text-white">المتبقي: <b class="text-red-600">${c.remaining}</b> د.ع</div>
@@ -860,6 +888,24 @@ input{font:inherit}
                 <button onclick="deleteCust(${i})" class="w-full bg-red-500 text-white p-2 rounded">حذف الزبون</button>
                 <button onclick="renderSection('customers')" class="w-full bg-gray-50 text-gray-700 p-2 rounded mt-2">رجوع لقائمة الزبائن</button>
             `;
+        }
+
+        function saveCustPhone(i) {
+            const input = document.getElementById('newPhoneInput-' + i);
+            const phone = input.value.trim();
+            if(!phone){ alert('الرجاء إدخال رقم الهاتف'); return; }
+            state.sales[i].phone = phone;
+            save();
+            showCustDetails(i);
+        }
+
+        function editCustPhone(i) {
+            const c = state.sales[i];
+            const newPhone = prompt('عدّل رقم هاتف الزبون:', c.phone || '');
+            if(newPhone === null) return;
+            c.phone = newPhone.trim();
+            save();
+            showCustDetails(i);
         }
 
         function addItemToCustomer(i) {
@@ -1094,7 +1140,9 @@ input{font:inherit}
 
             const matchedCustomers = state.sales
                 .map((c, idx) => ({...c, idx}))
-                .filter(c => c.name.toLowerCase().includes(q) || c.items.some(it => it.name.toLowerCase().includes(q)));
+                .filter(c => c.name.toLowerCase().includes(q)
+                    || c.items.some(it => it.name.toLowerCase().includes(q))
+                    || (c.phone && c.phone.replace(/\s/g, '').includes(q.replace(/\s/g, ''))));
 
             if(matchedItems.length === 0 && matchedCustomers.length === 0){
                 box.innerHTML = `<div class="p-3 text-gray-400 text-sm">لا توجد نتائج</div>`;
@@ -1153,8 +1201,9 @@ input{font:inherit}
             }
         });
 
-        const APP_VERSION = '1.5-75287db5';
-        document.getElementById('appVersion').textContent = 'الإصدار ' + APP_VERSION;
+        const APP_VERSION = '1.5-595e754d';
+        document.getElementById('appVersion').textContent = '⚠️ إخلاء مسؤولية: البيانات محفوظة محلياً على هذا الجهاز فقط. تلف الجهاز، حذف التطبيق، أو مسح بياناته قد يؤدي لفقدان كل البيانات نهائياً. المطوّر غير مسؤول عن أي فقدان بيانات ناتج عن ذلك. يرجى أخذ نسخة احتياطية دورياً من قسم الإعدادات.';
+        document.getElementById('appVersionNumber').textContent = 'الإصدار ' + APP_VERSION;
 
         function updateClockAndDate() {
             const now = new Date();
