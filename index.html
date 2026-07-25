@@ -101,6 +101,7 @@ input{font:inherit}
 .rounded-lg{border-radius:.5rem}
 .rounded-xl{border-radius:.75rem}
 .rounded-2xl{border-radius:1rem}
+.rounded-full{border-radius:9999px}
 .border-gray-200{border-color:#e5e7eb}
 .border-gray-300{border-color:#d1d5db}
 .shadow-lg{box-shadow:0 10px 15px -3px rgba(0,0,0,.1),0 4px 6px -4px rgba(0,0,0,.1)}
@@ -284,6 +285,8 @@ input{font:inherit}
         <div id="liveDate" class="text-lg text-gray-500 dark:text-gray-300 mt-2 font-semibold">--</div>
         <p class="text-gray-400 mt-2">اختر قسم من القائمة</p>
 
+        <div id="trialBanner" class="hidden mt-4 bg-orange-600 text-white text-sm px-4 py-2 rounded-full"></div>
+
         <div id="overdueAlertBox" class="hidden mt-6 w-full max-w-sm text-right"></div>
 
         <div class="mt-8 text-sm text-gray-500 dark:text-gray-300">
@@ -362,6 +365,7 @@ input{font:inherit}
 
         function showApp() {
             document.getElementById('activationGate').classList.add('hidden');
+            renderTrialBanner();
 
             if(sessionStorage.getItem('appUnlocked') === 'true'){
                 document.getElementById('appRoot').classList.remove('hidden');
@@ -422,6 +426,8 @@ input{font:inherit}
             document.getElementById('newPinInput').value = '';
         }
 
+        const TRIAL_DAYS = 3;
+
         async function verifyActivation() {
             const input = document.getElementById('activationCodeInput');
             const errorEl = document.getElementById('activationError');
@@ -430,16 +436,63 @@ input{font:inherit}
 
             if (!entered) { errorEl.textContent = 'الرجاء إدخال كود التفعيل'; errorEl.classList.remove('hidden'); return; }
 
-            const expected = normalizeCode(await computeActivationCode(deviceId));
+            const expectedFull = normalizeCode(await computeActivationCode(deviceId));
+            const expectedTrial = normalizeCode(await computeActivationCode(deviceId + '-TRIAL'));
 
-            if (entered === expected) {
+            if (entered === expectedFull) {
                 localStorage.setItem('activated', 'true');
                 localStorage.setItem('activatedDeviceId', deviceId);
+                localStorage.removeItem('isTrial');
+                localStorage.removeItem('trialExpiresAt');
+                showApp();
+            } else if (entered === expectedTrial) {
+                localStorage.setItem('activated', 'true');
+                localStorage.setItem('activatedDeviceId', deviceId);
+                localStorage.setItem('isTrial', 'true');
+                localStorage.setItem('trialExpiresAt', String(Date.now() + TRIAL_DAYS * 86400000));
                 showApp();
             } else {
                 errorEl.textContent = 'كود التفعيل غير صحيح، حاول مرة ثانية';
                 errorEl.classList.remove('hidden');
             }
+        }
+
+        function showTrialExpiredScreen() {
+            document.getElementById('appRoot').classList.add('hidden');
+            document.getElementById('lockGate').classList.add('hidden');
+            const gate = document.getElementById('activationGate');
+            gate.classList.remove('hidden');
+            gate.innerHTML = `
+                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 w-full max-w-sm text-center">
+                    <div class="text-4xl mb-2">⏰</div>
+                    <h2 class="text-lg font-bold mb-1 dark:text-white">انتهت الفترة التجريبية</h2>
+                    <p class="text-sm text-gray-500 dark:text-gray-300 mb-4">تواصل مع المطوّر لشراء النسخة الكاملة وتفعيلها بهذا الجهاز</p>
+                    <div class="mb-4">
+                        <div class="text-xs text-gray-400 mb-1">رمز الجهاز</div>
+                        <div class="flex gap-2">
+                            <div id="deviceIdDisplay" class="flex-1 font-mono text-lg tracking-widest bg-gray-100 dark:bg-gray-700 dark:text-white rounded-lg p-3 select-all">${localStorage.getItem('deviceId')}</div>
+                            <button onclick="copyDeviceId()" class="bg-gray-500 text-white px-3 rounded-lg text-sm shrink-0">نسخ</button>
+                        </div>
+                    </div>
+                    <input id="activationCodeInput" placeholder="أدخل كود التفعيل الكامل" class="w-full p-3 border rounded-lg mb-2 text-center font-mono tracking-widest uppercase">
+                    <div id="activationError" class="text-red-600 text-sm mb-2 hidden">كود التفعيل غير صحيح، حاول مرة ثانية</div>
+                    <button onclick="verifyActivation()" class="w-full bg-teal-600 text-white p-3 rounded-lg font-bold">تفعيل النسخة الكاملة</button>
+                    <div class="text-xs text-gray-400 mt-3" dir="ltr">أ. أرشد رياض فضالة الگروشي — 07811969939</div>
+                </div>
+            `;
+            document.getElementById('activationCodeInput').addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') verifyActivation();
+            });
+        }
+
+        function renderTrialBanner() {
+            const box = document.getElementById('trialBanner');
+            if (!box) return;
+            if (localStorage.getItem('isTrial') !== 'true') { box.classList.add('hidden'); return; }
+            const expiresAt = parseInt(localStorage.getItem('trialExpiresAt'));
+            const daysLeft = Math.max(0, Math.ceil((expiresAt - Date.now()) / 86400000));
+            box.textContent = `🕐 نسخة تجريبية — تنتهي خلال ${daysLeft} ${daysLeft === 1 ? 'يوم' : 'أيام'}`;
+            box.classList.remove('hidden');
         }
 
         function copyDeviceId() {
@@ -466,6 +519,10 @@ input{font:inherit}
                 && localStorage.getItem('activatedDeviceId') === deviceId;
 
             if (alreadyActivated) {
+                if (localStorage.getItem('isTrial') === 'true' && Date.now() > parseInt(localStorage.getItem('trialExpiresAt'))) {
+                    showTrialExpiredScreen();
+                    return;
+                }
                 showApp();
             } else {
                 document.getElementById('activationCodeInput').addEventListener('keydown', function(e) {
@@ -1208,7 +1265,7 @@ input{font:inherit}
             }
         });
 
-        const APP_VERSION = '1.5-27d26f26';
+        const APP_VERSION = '1.5-86e1a25a';
         document.getElementById('appVersion').textContent = '⚠️ إخلاء مسؤولية: البيانات محفوظة محلياً على هذا الجهاز فقط. تلف الجهاز، حذف التطبيق، أو مسح بياناته قد يؤدي لفقدان كل البيانات نهائياً. المطوّر غير مسؤول عن أي فقدان بيانات ناتج عن ذلك. يرجى أخذ نسخة احتياطية دورياً من قسم الإعدادات.';
         document.getElementById('appVersionNumber').textContent = 'الإصدار ' + APP_VERSION;
 
@@ -1286,6 +1343,14 @@ input{font:inherit}
 
         renderOverdueAlerts();
         setInterval(renderOverdueAlerts, 5 * 60 * 1000);
+
+        setInterval(() => {
+            if (localStorage.getItem('isTrial') === 'true' && Date.now() > parseInt(localStorage.getItem('trialExpiresAt'))) {
+                showTrialExpiredScreen();
+            } else {
+                renderTrialBanner();
+            }
+        }, 60 * 1000);
     </script>
 </body>
 </html>
