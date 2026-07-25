@@ -109,6 +109,8 @@ input{font:inherit}
 .bg-green-600{background-color:#16a34a}
 .bg-orange-600{background-color:#ea580c}
 .bg-teal-50{background-color:#f0fdfa}
+.bg-red-50{background-color:#fef2f2}
+.border-red-200{border-color:#fecaca}
 .bg-teal-600{background-color:#0d9488}
 .bg-teal-700{background-color:#0f766e}
 
@@ -160,10 +162,13 @@ input{font:inherit}
 
 /* الطباعة / حفظ PDF */
 #printArea { font-family: Tahoma, Arial, sans-serif; direction: rtl; }
+@page {
+    margin: 15mm 12mm;
+}
 @media print {
     body * { visibility: hidden; }
     #printArea, #printArea * { visibility: visible; }
-    #printArea { display: block !important; position: absolute; top: 0; right: 0; left: 0; width: 100%; padding: 20px; color: #000; background: #fff; }
+    #printArea { display: block !important; position: absolute; top: 0; right: 0; left: 0; width: 100%; padding: 12px; box-sizing: border-box; color: #000; background: #fff; }
 }
     </style>
     <link rel="manifest" href="manifest.json">
@@ -219,6 +224,18 @@ input{font:inherit}
         </div>
     </div>
 
+    <div id="lockGate" class="hidden fixed inset-0 z-[9999] bg-gray-900 flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 w-full max-w-sm text-center">
+            <div class="text-4xl mb-2">🔐</div>
+            <h2 class="text-lg font-bold mb-1 dark:text-white">دخول البرنامج</h2>
+            <p class="text-sm text-gray-500 dark:text-gray-300 mb-4">أدخل كلمة السر أو رمز الدخول</p>
+
+            <input id="lockInput" type="password" placeholder="كلمة السر أو رمز الدخول" class="w-full p-3 border rounded-lg mb-2 text-center">
+            <div id="lockError" class="text-red-600 text-sm mb-2 hidden">غير صحيح، حاول مرة ثانية</div>
+            <button onclick="verifyLock()" class="w-full bg-teal-600 text-white p-3 rounded-lg font-bold">دخول</button>
+        </div>
+    </div>
+
     <div id="appRoot" class="hidden contents">
 
     <aside class="w-full md:w-32 bg-white dark:bg-gray-800 border-t md:border-l border-gray-200 dark:border-gray-700 flex flex-col shadow-lg z-40">
@@ -258,6 +275,8 @@ input{font:inherit}
         <div id="liveClock" class="text-4xl font-bold dark:text-white">00:00:00</div>
         <div id="liveDate" class="text-lg text-gray-500 dark:text-gray-300 mt-2 font-semibold">--</div>
         <p class="text-gray-400 mt-2">اختر قسم من القائمة</p>
+
+        <div id="overdueAlertBox" class="hidden mt-6 w-full max-w-sm text-right"></div>
 
         <div class="mt-8 text-sm text-gray-500 dark:text-gray-300">
             <div class="font-bold">برمجة وتطوير أ. أرشد رياض فضالة الگروشي</div>
@@ -332,7 +351,59 @@ input{font:inherit}
 
         function showApp() {
             document.getElementById('activationGate').classList.add('hidden');
-            document.getElementById('appRoot').classList.remove('hidden');
+
+            if(sessionStorage.getItem('appUnlocked') === 'true'){
+                document.getElementById('appRoot').classList.remove('hidden');
+            } else {
+                document.getElementById('lockGate').classList.remove('hidden');
+                setTimeout(() => document.getElementById('lockInput').focus(), 100);
+            }
+        }
+
+        // ---------- قفل الدخول (كلمة السر / رمز الدخول) ----------
+        function getAppPassword() {
+            let p = localStorage.getItem('appPassword');
+            if(p === null){ p = '1'; localStorage.setItem('appPassword', p); }
+            return p;
+        }
+        function getAppPin() {
+            let p = localStorage.getItem('appPin');
+            if(p === null){ p = '1'; localStorage.setItem('appPin', p); }
+            return p;
+        }
+
+        function verifyLock() {
+            const input = document.getElementById('lockInput');
+            const errorEl = document.getElementById('lockError');
+            const entered = input.value;
+
+            if(entered === getAppPassword() || entered === getAppPin()){
+                sessionStorage.setItem('appUnlocked', 'true');
+                document.getElementById('lockGate').classList.add('hidden');
+                document.getElementById('appRoot').classList.remove('hidden');
+                errorEl.classList.add('hidden');
+                input.value = '';
+            } else {
+                errorEl.classList.remove('hidden');
+                input.value = '';
+                input.focus();
+            }
+        }
+
+        function saveAppPassword() {
+            const v = document.getElementById('newPasswordInput').value.trim();
+            if(!v){ alert('الرجاء إدخال كلمة سر'); return; }
+            localStorage.setItem('appPassword', v);
+            alert('تم تغيير كلمة السر ✓');
+            document.getElementById('newPasswordInput').value = '';
+        }
+
+        function saveAppPin() {
+            const v = document.getElementById('newPinInput').value.trim();
+            if(!v){ alert('الرجاء إدخال رمز دخول'); return; }
+            localStorage.setItem('appPin', v);
+            alert('تم تغيير رمز الدخول ✓');
+            document.getElementById('newPinInput').value = '';
         }
 
         async function verifyActivation() {
@@ -385,13 +456,19 @@ input{font:inherit}
                     if (e.key === 'Enter') verifyActivation();
                 });
             }
+
+            getAppPassword();
+            getAppPin();
+            document.getElementById('lockInput').addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') verifyLock();
+            });
         })();
         // ==================== نهاية نظام التفعيل ====================
 
         let state = {
             sales: (JSON.parse(localStorage.getItem('mySales')) || []).map(c =>
                 c.items ? c : {...c, items: [{name: c.item, price: c.total}]}
-            ),
+            ).map(c => c.createdAt ? c : {...c, createdAt: Date.now()}),
             inventory: JSON.parse(localStorage.getItem('myInventory')) || []
         };
 
@@ -467,6 +544,30 @@ input{font:inherit}
                     title.innerText = "الإعدادات";
                     content.innerHTML = `
                         <button onclick="toggleDarkMode()" class="w-full bg-teal-700 text-white p-3 rounded mb-3">🌙 تبديل الوضع الليلي / النهاري</button>
+
+                        <div class="p-3 bg-gray-50 dark:bg-gray-700 dark:text-white rounded mb-3">
+                            <div class="text-sm font-bold mb-2">⚠️ تنبيه الديون المتأخرة</div>
+                            <div class="text-xs text-gray-500 dark:text-gray-300 mb-2">نبّهني إذا مرّت هالمدة على آخر دفعة للزبون بدون تسديد</div>
+                            <div class="flex gap-2">
+                                <input id="overdueDaysInput" type="number" min="1" value="${getOverdueThreshold()}" class="flex-1 p-2 border rounded text-center">
+                                <button onclick="saveOverdueThreshold()" class="bg-teal-600 text-white px-3 rounded">حفظ</button>
+                            </div>
+                        </div>
+
+                        <div class="p-3 bg-gray-50 dark:bg-gray-700 dark:text-white rounded mb-3">
+                            <div class="text-sm font-bold mb-2">🔐 قفل دخول البرنامج</div>
+                            <div class="text-xs text-gray-500 dark:text-gray-300 mb-1">تغيير كلمة السر</div>
+                            <div class="flex gap-2 mb-3">
+                                <input id="newPasswordInput" placeholder="كلمة السر الجديدة" class="flex-1 p-2 border rounded">
+                                <button onclick="saveAppPassword()" class="bg-teal-600 text-white px-3 rounded">حفظ</button>
+                            </div>
+                            <div class="text-xs text-gray-500 dark:text-gray-300 mb-1">تغيير رمز الدخول</div>
+                            <div class="flex gap-2">
+                                <input id="newPinInput" placeholder="رمز الدخول الجديد" class="flex-1 p-2 border rounded">
+                                <button onclick="saveAppPin()" class="bg-teal-600 text-white px-3 rounded">حفظ</button>
+                            </div>
+                        </div>
+
                         <button onclick="exportBackup()" class="w-full bg-teal-600 text-white p-3 rounded mb-3">📤 تصدير نسخة احتياطية</button>
                         <button onclick="document.getElementById('importFile').click()" class="w-full bg-gray-500 text-white p-3 rounded mb-3">📥 استيراد نسخة احتياطية</button>
                         <input id="importFile" type="file" accept="application/json" class="hidden" onchange="importBackup(event)">
@@ -673,7 +774,7 @@ input{font:inherit}
                 if(down > 0){
                     c.paid += down;
                     c.remaining -= down;
-                    c.payments.push({amount: down, stamp: nowStamp()});
+                    c.payments.push({amount: down, stamp: nowStamp(), ts: Date.now()});
                 }
                 if(item.qty !== null && item.qty !== undefined) item.qty -= 1;
                 save();
@@ -691,7 +792,8 @@ input{font:inherit}
                 total: item.price,
                 paid: down,
                 remaining: item.price - down,
-                payments: down > 0 ? [{amount: down, stamp: nowStamp()}] : []
+                payments: down > 0 ? [{amount: down, stamp: nowStamp(), ts: Date.now()}] : [],
+                createdAt: Date.now()
             });
             save();
             renderSection('customers');
@@ -799,7 +901,7 @@ input{font:inherit}
 
             c.paid += amount;
             c.remaining -= amount;
-            c.payments.push({amount, stamp: nowStamp(), note});
+            c.payments.push({amount, stamp: nowStamp(), note, ts: Date.now()});
             save();
             showCustDetails(i);
         }
@@ -1043,7 +1145,7 @@ input{font:inherit}
             }
         });
 
-        const APP_VERSION = '1.5.0';
+        const APP_VERSION = '1.5-dfec5743';
         document.getElementById('appVersion').textContent = 'الإصدار ' + APP_VERSION;
 
         function updateClockAndDate() {
@@ -1057,6 +1159,69 @@ input{font:inherit}
         }
         updateClockAndDate();
         setInterval(updateClockAndDate, 1000);
+
+        // ---------- تنبيه الديون المتأخرة ----------
+        function getOverdueThreshold() {
+            const v = parseInt(localStorage.getItem('overdueDays'));
+            return isNaN(v) || v <= 0 ? 14 : v;
+        }
+
+        function saveOverdueThreshold() {
+            const input = document.getElementById('overdueDaysInput');
+            const v = parseInt(input.value);
+            if(isNaN(v) || v <= 0){ alert('الرجاء إدخال رقم أيام صحيح'); return; }
+            localStorage.setItem('overdueDays', v);
+            alert('تم الحفظ ✓');
+            renderOverdueAlerts();
+        }
+
+        function getLastActivityTs(c) {
+            const paymentTimestamps = (c.payments || []).map(p => p.ts).filter(t => typeof t === 'number');
+            if(paymentTimestamps.length) return Math.max(...paymentTimestamps);
+            if(typeof c.createdAt === 'number') return c.createdAt;
+            return null;
+        }
+
+        function getOverdueCustomers() {
+            const threshold = getOverdueThreshold();
+            const now = Date.now();
+            return state.sales
+                .map((c, idx) => ({...c, idx, lastTs: getLastActivityTs(c)}))
+                .filter(c => c.remaining > 0 && c.lastTs !== null)
+                .map(c => ({...c, days: Math.floor((now - c.lastTs) / 86400000)}))
+                .filter(c => c.days >= threshold)
+                .sort((a, b) => b.days - a.days);
+        }
+
+        function goToOverdueCustomer(idx) {
+            renderSection('customers');
+            showCustDetails(idx);
+        }
+
+        function renderOverdueAlerts() {
+            const box = document.getElementById('overdueAlertBox');
+            if(!box) return;
+            const overdue = getOverdueCustomers();
+
+            if(!overdue.length){ box.classList.add('hidden'); box.innerHTML = ''; return; }
+
+            box.innerHTML = `
+                <div class="bg-red-50 dark:bg-gray-700 border border-red-200 dark:border-gray-600 rounded-xl p-3">
+                    <div class="text-red-600 font-bold text-sm mb-2">⚠️ ديون متأخرة (${overdue.length})</div>
+                    ${overdue.slice(0, 5).map(c => `
+                        <div onclick="goToOverdueCustomer(${c.idx})" class="flex justify-between items-center text-sm p-2 bg-white dark:bg-gray-800 dark:text-white rounded mb-1 cursor-pointer">
+                            <span>👤 ${c.name}</span>
+                            <span class="text-red-600 text-xs">${c.days} يوم — ${c.remaining} د.ع</span>
+                        </div>
+                    `).join('')}
+                    ${overdue.length > 5 ? `<div class="text-xs text-gray-400 text-center mt-1">و${overdue.length - 5} زبون آخر متأخر...</div>` : ''}
+                </div>
+            `;
+            box.classList.remove('hidden');
+        }
+
+        renderOverdueAlerts();
+        setInterval(renderOverdueAlerts, 5 * 60 * 1000);
     </script>
 </body>
 </html>
