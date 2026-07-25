@@ -228,10 +228,11 @@ input{font:inherit}
         <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 w-full max-w-sm text-center">
             <div class="text-4xl mb-2">🔐</div>
             <h2 class="text-lg font-bold mb-1 dark:text-white">دخول البرنامج</h2>
-            <p class="text-sm text-gray-500 dark:text-gray-300 mb-4">أدخل كلمة السر أو رمز الدخول</p>
+            <p class="text-sm text-gray-500 dark:text-gray-300 mb-4">أدخل كلمة السر وكلمة المرور</p>
 
-            <input id="lockInput" type="password" placeholder="كلمة السر أو رمز الدخول" class="w-full p-3 border rounded-lg mb-2 text-center">
-            <div id="lockError" class="text-red-600 text-sm mb-2 hidden">غير صحيح، حاول مرة ثانية</div>
+            <input id="lockPasswordInput" type="password" placeholder="كلمة السر" class="w-full p-3 border rounded-lg mb-2 text-center">
+            <input id="lockPinInput" type="password" placeholder="كلمة المرور" class="w-full p-3 border rounded-lg mb-2 text-center">
+            <div id="lockError" class="text-red-600 text-sm mb-2 hidden">كلمة السر أو كلمة المرور غير صحيحة</div>
             <button onclick="verifyLock()" class="w-full bg-teal-600 text-white p-3 rounded-lg font-bold">دخول</button>
         </div>
     </div>
@@ -356,7 +357,7 @@ input{font:inherit}
                 document.getElementById('appRoot').classList.remove('hidden');
             } else {
                 document.getElementById('lockGate').classList.remove('hidden');
-                setTimeout(() => document.getElementById('lockInput').focus(), 100);
+                setTimeout(() => document.getElementById('lockPasswordInput').focus(), 100);
             }
         }
 
@@ -373,20 +374,25 @@ input{font:inherit}
         }
 
         function verifyLock() {
-            const input = document.getElementById('lockInput');
+            const pwInput = document.getElementById('lockPasswordInput');
+            const pinInput = document.getElementById('lockPinInput');
             const errorEl = document.getElementById('lockError');
-            const entered = input.value;
 
-            if(entered === getAppPassword() || entered === getAppPin()){
+            const passwordOk = pwInput.value === getAppPassword();
+            const pinOk = pinInput.value === getAppPin();
+
+            if(passwordOk && pinOk){
                 sessionStorage.setItem('appUnlocked', 'true');
                 document.getElementById('lockGate').classList.add('hidden');
                 document.getElementById('appRoot').classList.remove('hidden');
                 errorEl.classList.add('hidden');
-                input.value = '';
+                pwInput.value = '';
+                pinInput.value = '';
             } else {
                 errorEl.classList.remove('hidden');
-                input.value = '';
-                input.focus();
+                pwInput.value = '';
+                pinInput.value = '';
+                pwInput.focus();
             }
         }
 
@@ -402,7 +408,7 @@ input{font:inherit}
             const v = document.getElementById('newPinInput').value.trim();
             if(!v){ alert('الرجاء إدخال رمز دخول'); return; }
             localStorage.setItem('appPin', v);
-            alert('تم تغيير رمز الدخول ✓');
+            alert('تم تغيير كلمة المرور ✓');
             document.getElementById('newPinInput').value = '';
         }
 
@@ -459,8 +465,10 @@ input{font:inherit}
 
             getAppPassword();
             getAppPin();
-            document.getElementById('lockInput').addEventListener('keydown', function(e) {
-                if (e.key === 'Enter') verifyLock();
+            ['lockPasswordInput', 'lockPinInput'].forEach(id => {
+                document.getElementById(id).addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') verifyLock();
+                });
             });
         })();
         // ==================== نهاية نظام التفعيل ====================
@@ -561,9 +569,9 @@ input{font:inherit}
                                 <input id="newPasswordInput" placeholder="كلمة السر الجديدة" class="flex-1 p-2 border rounded">
                                 <button onclick="saveAppPassword()" class="bg-teal-600 text-white px-3 rounded">حفظ</button>
                             </div>
-                            <div class="text-xs text-gray-500 dark:text-gray-300 mb-1">تغيير رمز الدخول</div>
+                            <div class="text-xs text-gray-500 dark:text-gray-300 mb-1">تغيير كلمة المرور</div>
                             <div class="flex gap-2">
-                                <input id="newPinInput" placeholder="رمز الدخول الجديد" class="flex-1 p-2 border rounded">
+                                <input id="newPinInput" placeholder="كلمة المرور الجديدة" class="flex-1 p-2 border rounded">
                                 <button onclick="saveAppPin()" class="bg-teal-600 text-white px-3 rounded">حفظ</button>
                             </div>
                         </div>
@@ -1145,7 +1153,7 @@ input{font:inherit}
             }
         });
 
-        const APP_VERSION = '1.5-dfec5743';
+        const APP_VERSION = '1.5-75287db5';
         document.getElementById('appVersion').textContent = 'الإصدار ' + APP_VERSION;
 
         function updateClockAndDate() {
