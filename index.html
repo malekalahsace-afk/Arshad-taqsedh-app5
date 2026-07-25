@@ -84,6 +84,10 @@ input{font:inherit}
 /* Position offsets */
 .top-full{top:100%}
 .left-2{left:.5rem}
+.left-0{left:0}
+.right-0{right:0}
+.mx-auto{margin-left:auto;margin-right:auto}
+.pb-3{padding-bottom:.75rem}
 .right-2{right:.5rem}
 .z-40{z-index:40}
 .z-50{z-index:50}
@@ -286,8 +290,10 @@ input{font:inherit}
             <div class="mt-1" dir="ltr">07811969939</div>
         </div>
 
-        <div id="appVersion" class="mt-6 mb-1 w-full max-w-xs px-4 text-center text-xs text-gray-400 dark:text-gray-500 leading-relaxed"></div>
-        <div id="appVersionNumber" class="text-xs text-gray-400 dark:text-gray-500"></div>
+        <div class="absolute bottom-0 left-0 right-0 pb-3 px-4 text-center">
+            <div id="appVersion" class="w-full max-w-xs mx-auto text-center text-xs text-gray-400 dark:text-gray-500 leading-relaxed mb-1"></div>
+            <div id="appVersionNumber" class="text-xs text-gray-400 dark:text-gray-500"></div>
+        </div>
     </main>
 
     <div id="printArea" class="hidden"></div>
@@ -1201,7 +1207,7 @@ input{font:inherit}
             }
         });
 
-        const APP_VERSION = '1.5-595e754d';
+        const APP_VERSION = '1.5-64d14371';
         document.getElementById('appVersion').textContent = '⚠️ إخلاء مسؤولية: البيانات محفوظة محلياً على هذا الجهاز فقط. تلف الجهاز، حذف التطبيق، أو مسح بياناته قد يؤدي لفقدان كل البيانات نهائياً. المطوّر غير مسؤول عن أي فقدان بيانات ناتج عن ذلك. يرجى أخذ نسخة احتياطية دورياً من قسم الإعدادات.';
         document.getElementById('appVersionNumber').textContent = 'الإصدار ' + APP_VERSION;
 
