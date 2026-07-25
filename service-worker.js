@@ -1,4 +1,4 @@
-const CACHE_NAME = 'taqseet-cache-27d26f26';
+const CACHE_NAME = 'taqseet-cache-86e1a25a';
 const FILES_TO_CACHE = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', (event) => {
