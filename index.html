@@ -78,6 +78,7 @@ input{font:inherit}
 .mb-4{margin-bottom:1rem}
 .mt-1{margin-top:.25rem}
 .mt-2{margin-top:.5rem}
+.mt-3{margin-top:.75rem}
 .mt-4{margin-top:1rem}
 .gap-1{gap:.25rem}
 .gap-2{gap:.5rem}
@@ -89,6 +90,7 @@ input{font:inherit}
 .right-0{right:0}
 .mx-auto{margin-left:auto;margin-right:auto}
 .pb-3{padding-bottom:.75rem}
+.pb-2{padding-bottom:.5rem}
 .right-2{right:.5rem}
 .z-40{z-index:40}
 .z-50{z-index:50}
@@ -138,6 +140,8 @@ input{font:inherit}
 .font-bold{font-weight:700}
 .font-semibold{font-weight:600}
 .text-2xl{font-size:1.5rem;line-height:2rem}
+.text-3xl{font-size:1.875rem;line-height:2.25rem}
+.text-base{font-size:1rem;line-height:1.5rem}
 .text-4xl{font-size:2.25rem;line-height:2.5rem}
 .text-lg{font-size:1.125rem;line-height:1.75rem}
 .text-sm{font-size:.875rem;line-height:1.25rem}
@@ -281,20 +285,20 @@ input{font:inherit}
     </aside>
 
     <main class="flex-1 flex flex-col justify-center items-center text-center relative">
-        <div id="liveClock" class="text-4xl font-bold dark:text-white">00:00:00</div>
-        <div id="liveDate" class="text-lg text-gray-500 dark:text-gray-300 mt-2 font-semibold">--</div>
-        <p class="text-gray-400 mt-2">اختر قسم من القائمة</p>
+        <div id="liveClock" class="text-3xl font-bold dark:text-white">00:00:00</div>
+        <div id="liveDate" class="text-base text-gray-500 dark:text-gray-300 mt-1 font-semibold">--</div>
+        <p class="text-gray-400 mt-1 text-sm">اختر قسم من القائمة</p>
 
-        <div id="trialBanner" class="hidden mt-4 bg-orange-600 text-white text-sm px-4 py-2 rounded-full"></div>
+        <div id="trialBanner" class="hidden mt-2 bg-orange-600 text-white text-xs px-3 py-1 rounded-full"></div>
 
-        <div id="overdueAlertBox" class="hidden mt-6 w-full max-w-sm text-right"></div>
+        <div id="overdueAlertBox" class="hidden mt-3 w-full max-w-sm text-right"></div>
 
-        <div class="mt-8 text-sm text-gray-500 dark:text-gray-300">
+        <div class="mt-4 text-xs text-gray-500 dark:text-gray-300">
             <div class="font-bold">برمجة وتطوير أ. أرشد رياض فضالة الگروشي</div>
             <div class="mt-1" dir="ltr">07811969939</div>
         </div>
 
-        <div class="absolute bottom-0 left-0 right-0 pb-3 px-4 text-center">
+        <div class="absolute bottom-0 left-0 right-0 pb-2 px-4 text-center">
             <div id="appVersion" class="w-full max-w-xs mx-auto text-center text-xs text-gray-400 dark:text-gray-500 leading-relaxed mb-1"></div>
             <div id="appVersionNumber" class="text-xs text-gray-400 dark:text-gray-500"></div>
         </div>
@@ -1266,7 +1270,7 @@ input{font:inherit}
             }
         });
 
-        const APP_VERSION = '1.5-0fe5cbb4';
+        const APP_VERSION = '1.5-5b38cec0';
         document.getElementById('appVersion').textContent = '⚠️ إخلاء مسؤولية: البيانات محفوظة محلياً على هذا الجهاز فقط. تلف الجهاز، حذف التطبيق، أو مسح بياناته قد يؤدي لفقدان كل البيانات نهائياً. المطوّر غير مسؤول عن أي فقدان بيانات ناتج عن ذلك. يرجى أخذ نسخة احتياطية دورياً من قسم الإعدادات.';
         document.getElementById('appVersionNumber').textContent = 'الإصدار ' + APP_VERSION;
 
