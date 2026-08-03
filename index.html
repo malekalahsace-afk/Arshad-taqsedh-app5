@@ -184,7 +184,7 @@ input{font:inherit}
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="نظام التقسيط">
+    <meta name="apple-mobile-web-app-title" content="التقسيط">
     <link rel="apple-touch-icon" href="icon-192.png">
     <link rel="icon" href="icon-192.png">
     <script>
@@ -247,7 +247,7 @@ input{font:inherit}
 
     <div id="appRoot" class="hidden contents">
 
-    <aside class="w-full bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex flex-col shadow-lg z-40">
+    <aside class="relative w-full bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex flex-col shadow-lg z-40">
         <div class="relative p-2 border-b border-gray-200 dark:border-gray-700">
             <input id="globalSearch" oninput="liveSearch(this.value)" placeholder="🔍 بحث زبون / مادة"
                 class="w-full p-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-400">
@@ -271,7 +271,7 @@ input{font:inherit}
             </button>
         </div>
 
-        <div id="drawer" class="hidden w-full bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 shadow-lg p-4 max-h-[65vh] overflow-y-auto">
+        <div id="drawer" class="hidden absolute top-full left-0 right-0 w-full bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 shadow-2xl p-4 max-h-[65vh] overflow-y-auto z-40">
             <div class="flex justify-between items-center mb-4">
                 <h2 id="drawerTitle" class="font-bold text-lg dark:text-white"></h2>
                 <button onclick="closeDrawer()" class="dark:text-white text-2xl leading-none">✕</button>
@@ -1266,7 +1266,7 @@ input{font:inherit}
             }
         });
 
-        const APP_VERSION = '1.5-b114325a';
+        const APP_VERSION = '1.5-0fe5cbb4';
         document.getElementById('appVersion').textContent = '⚠️ إخلاء مسؤولية: البيانات محفوظة محلياً على هذا الجهاز فقط. تلف الجهاز، حذف التطبيق، أو مسح بياناته قد يؤدي لفقدان كل البيانات نهائياً. المطوّر غير مسؤول عن أي فقدان بيانات ناتج عن ذلك. يرجى أخذ نسخة احتياطية دورياً من قسم الإعدادات.';
         document.getElementById('appVersionNumber').textContent = 'الإصدار ' + APP_VERSION;
 
