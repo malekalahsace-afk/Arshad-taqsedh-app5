@@ -38,7 +38,7 @@ input{font:inherit}
 /* Sizing */
 .w-full{width:100%}
 .w-20{width:5rem}
-.h-screen{height:100vh}
+.h-screen{height:100vh;height:100dvh}
 .max-h-40{max-height:10rem}
 .max-h-48{max-height:12rem}
 .max-h-72{max-height:18rem}
@@ -285,20 +285,20 @@ input{font:inherit}
     </aside>
 
     <main class="flex-1 flex flex-col justify-center items-center text-center relative">
-        <div id="liveClock" class="text-3xl font-bold dark:text-white">00:00:00</div>
-        <div id="liveDate" class="text-base text-gray-500 dark:text-gray-300 mt-1 font-semibold">--</div>
-        <p class="text-gray-400 mt-1 text-sm">اختر قسم من القائمة</p>
+        <div id="liveClock" class="text-2xl font-bold dark:text-white">00:00:00</div>
+        <div id="liveDate" class="text-sm text-gray-500 dark:text-gray-300 mt-1 font-semibold">--</div>
+        <p class="text-gray-400 mt-1 text-xs">اختر قسم من القائمة</p>
 
         <div id="trialBanner" class="hidden mt-2 bg-orange-600 text-white text-xs px-3 py-1 rounded-full"></div>
 
-        <div id="overdueAlertBox" class="hidden mt-3 w-full max-w-sm text-right"></div>
+        <div id="overdueAlertBox" class="hidden mt-2 w-full max-w-sm text-right"></div>
 
-        <div class="mt-4 text-xs text-gray-500 dark:text-gray-300">
+        <div class="mt-3 text-xs text-gray-500 dark:text-gray-300">
             <div class="font-bold">برمجة وتطوير أ. أرشد رياض فضالة الگروشي</div>
             <div class="mt-1" dir="ltr">07811969939</div>
         </div>
 
-        <div class="absolute bottom-0 left-0 right-0 pb-2 px-4 text-center">
+        <div class="mt-3 pb-2 px-4 text-center">
             <div id="appVersion" class="w-full max-w-xs mx-auto text-center text-xs text-gray-400 dark:text-gray-500 leading-relaxed mb-1"></div>
             <div id="appVersionNumber" class="text-xs text-gray-400 dark:text-gray-500"></div>
         </div>
@@ -1270,7 +1270,7 @@ input{font:inherit}
             }
         });
 
-        const APP_VERSION = '1.5-5b38cec0';
+        const APP_VERSION = '1.5-666fa36f';
         document.getElementById('appVersion').textContent = '⚠️ إخلاء مسؤولية: البيانات محفوظة محلياً على هذا الجهاز فقط. تلف الجهاز، حذف التطبيق، أو مسح بياناته قد يؤدي لفقدان كل البيانات نهائياً. المطوّر غير مسؤول عن أي فقدان بيانات ناتج عن ذلك. يرجى أخذ نسخة احتياطية دورياً من قسم الإعدادات.';
         document.getElementById('appVersionNumber').textContent = 'الإصدار ' + APP_VERSION;
 
