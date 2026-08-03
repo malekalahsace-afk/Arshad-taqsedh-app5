@@ -210,7 +210,7 @@ input{font:inherit}
         }
     </script>
 </head>
-<body class="bg-gray-100 dark:bg-gray-900 h-screen flex flex-col md:flex-row">
+<body class="bg-gray-100 dark:bg-gray-900 h-screen flex flex-col">
 
     <div id="activationGate" class="fixed inset-0 z-[9999] bg-gray-900 flex items-center justify-center p-4">
         <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 w-full max-w-sm text-center">
@@ -247,13 +247,13 @@ input{font:inherit}
 
     <div id="appRoot" class="hidden contents">
 
-    <aside class="w-full md:w-32 bg-white dark:bg-gray-800 border-t md:border-l border-gray-200 dark:border-gray-700 flex flex-col shadow-lg z-40">
+    <aside class="w-full bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex flex-col shadow-lg z-40">
         <div class="relative p-2 border-b border-gray-200 dark:border-gray-700">
             <input id="globalSearch" oninput="liveSearch(this.value)" placeholder="🔍 بحث زبون / مادة"
                 class="w-full p-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-400">
             <div id="searchResults" style="-webkit-overflow-scrolling: touch;" class="hidden absolute top-full mt-1 left-2 right-2 bg-white dark:bg-gray-700 rounded-xl shadow-2xl max-h-72 overflow-y-auto z-50 text-right"></div>
         </div>
-        <div class="flex-1 flex flex-row md:flex-col items-center py-2 justify-around">
+        <div class="flex-1 flex flex-row items-center py-2 justify-around">
             <button onclick="renderSection('sales')" class="p-4 bg-gray-50 dark:bg-gray-700 rounded-2xl hover:bg-teal-100 transition-all text-2xl flex flex-col items-center gap-1">
                 📊 <span class="dark:text-white text-[10px] font-bold">مبيعات</span>
             </button>
@@ -1265,7 +1265,7 @@ input{font:inherit}
             }
         });
 
-        const APP_VERSION = '1.5-86e1a25a';
+        const APP_VERSION = '1.5-578189ba';
         document.getElementById('appVersion').textContent = '⚠️ إخلاء مسؤولية: البيانات محفوظة محلياً على هذا الجهاز فقط. تلف الجهاز، حذف التطبيق، أو مسح بياناته قد يؤدي لفقدان كل البيانات نهائياً. المطوّر غير مسؤول عن أي فقدان بيانات ناتج عن ذلك. يرجى أخذ نسخة احتياطية دورياً من قسم الإعدادات.';
         document.getElementById('appVersionNumber').textContent = 'الإصدار ' + APP_VERSION;
 
