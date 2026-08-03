@@ -311,9 +311,10 @@ input{font:inherit}
 
     <script>
         // ==================== نظام التفعيل ====================
-        // ⚠️ نفس المفتاح والأبجدية بالضبط الموجودة بمولّد الأكواد الخاص بالمطوّر.
+        // ⚠️ نفس المفاتيح والأبجدية بالضبط الموجودة بمولّد الأكواد الخاص بالمطوّر.
         // لازم يبقوا متطابقين تماماً وإلا الأكواد ما تشتغل.
         const ACTIVATION_SECRET_KEY = '11d35eb9ea09807fe10f2fa63a4df598a14ae0190d205cccef35257954e8529c';
+        const TRIAL_SECRET_KEY = '0c4ca7a054204104612849b5ae5a95d6038f3dc7561a5deaca0b0e19a21bdd2f';
         const ACTIVATION_CODE_ALPHABET = '23456789ABCDEFGHJKMNPQRSTUVWXYZ';
 
         async function sha256Hex(plainText) {
@@ -322,8 +323,8 @@ input{font:inherit}
             return Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, '0')).join('');
         }
 
-        async function computeActivationCode(deviceId) {
-            const hashHex = await sha256Hex(deviceId + '|' + ACTIVATION_SECRET_KEY);
+        async function computeCode(deviceId, secretKey) {
+            const hashHex = await sha256Hex(deviceId + '|' + secretKey);
             let code = '';
             for (let i = 0; i < 8; i++) {
                 const byte = parseInt(hashHex.substr(i * 2, 2), 16);
@@ -436,8 +437,8 @@ input{font:inherit}
 
             if (!entered) { errorEl.textContent = 'الرجاء إدخال كود التفعيل'; errorEl.classList.remove('hidden'); return; }
 
-            const expectedFull = normalizeCode(await computeActivationCode(deviceId));
-            const expectedTrial = normalizeCode(await computeActivationCode(deviceId + '-TRIAL'));
+            const expectedFull = normalizeCode(await computeCode(deviceId, ACTIVATION_SECRET_KEY));
+            const expectedTrial = normalizeCode(await computeCode(deviceId, TRIAL_SECRET_KEY));
 
             if (entered === expectedFull) {
                 localStorage.setItem('activated', 'true');
@@ -1265,7 +1266,7 @@ input{font:inherit}
             }
         });
 
-        const APP_VERSION = '1.5-578189ba';
+        const APP_VERSION = '1.5-b114325a';
         document.getElementById('appVersion').textContent = '⚠️ إخلاء مسؤولية: البيانات محفوظة محلياً على هذا الجهاز فقط. تلف الجهاز، حذف التطبيق، أو مسح بياناته قد يؤدي لفقدان كل البيانات نهائياً. المطوّر غير مسؤول عن أي فقدان بيانات ناتج عن ذلك. يرجى أخذ نسخة احتياطية دورياً من قسم الإعدادات.';
         document.getElementById('appVersionNumber').textContent = 'الإصدار ' + APP_VERSION;
 
