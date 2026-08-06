@@ -1270,7 +1270,17 @@ input{font:inherit}
             }
         });
 
-        const APP_VERSION = '1.5-6e75604e';
+        // إغلاق القائمة المفتوحة (الدرج) عند الضغط خارجها
+        document.addEventListener('click', function(e) {
+            const drawer = document.getElementById('drawer');
+            const asideEl = document.querySelector('aside');
+            if(!drawer || drawer.classList.contains('hidden')) return;
+            if(!drawer.contains(e.target) && asideEl && !asideEl.contains(e.target)){
+                closeDrawer();
+            }
+        });
+
+        const APP_VERSION = '1.5-feee7a23';
         document.getElementById('appVersion').textContent = '⚠️ إخلاء مسؤولية: البيانات محفوظة محلياً على هذا الجهاز فقط. تلف الجهاز، حذف التطبيق، أو مسح بياناته قد يؤدي لفقدان كل البيانات نهائياً. المطوّر غير مسؤول عن أي فقدان بيانات ناتج عن ذلك. يرجى أخذ نسخة احتياطية دورياً من قسم الإعدادات.';
         document.getElementById('appVersionNumber').textContent = 'الإصدار ' + APP_VERSION;
 
